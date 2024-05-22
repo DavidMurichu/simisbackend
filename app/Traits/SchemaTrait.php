@@ -154,8 +154,6 @@ private function isColumnNullable($tableName, $column)
         {
          try{
 
-
-
             if (!Schema::hasTable($tableName)) {
                 return response()->json(['error' => 'Table does not exist'], 404);
             }
@@ -168,7 +166,7 @@ private function isColumnNullable($tableName, $column)
             }
             $data = $query->get();
             // Return the data
-            return $data[0];
+            return $data;
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return response()->json(['error'=> $e->getMessage()],500);
@@ -199,4 +197,7 @@ private function isColumnNullable($tableName, $column)
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }
+
+
+
 }

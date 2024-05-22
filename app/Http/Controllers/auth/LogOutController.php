@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\auth;
 
 use App\Http\Controllers\Controller;
+use App\Traits\DemonTrait;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Models\User;
+use App\Models\Audits;
+use Log;
 
 
 class LogOutController extends Controller
 {
-    
+    use DemonTrait;
 public function logout(Request $request)
 {
     try {
@@ -34,6 +37,13 @@ public function logout(Request $request)
         //deactivate user
         $user->active=0;
         $user->save();
+
+          // create an Audit
+        $auditData=[
+            'user_id' => $user->id,
+            'activity_type' => 'logout',
+        ];
+        $this->makeAudit($auditData);
 
         $data=[
             'message' => 'User logged out successfully',

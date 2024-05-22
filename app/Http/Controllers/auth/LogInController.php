@@ -5,6 +5,7 @@ namespace App\Http\Controllers\auth;
 use App\Models\Audits;
 use App\Traits\AuthTrait;
 use App\Http\Controllers\Controller;
+use App\Traits\DemonTrait;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -18,6 +19,7 @@ class LogInController extends Controller
 {
     //Log in
     use AuthTrait;
+    use DemonTrait;
 
 public function login(Request $request)
 {
@@ -32,7 +34,7 @@ public function login(Request $request)
 
         // Find user by email
         $user = User::where('email', strtolower(trim($request->email)))->first();
-        // $user->active = 0;
+        // $user->active = 1;
         // $user->save();
         // Check user existence and verify password
         if (! $user || ! Hash::check($request->password, $user->password)) {
@@ -49,15 +51,21 @@ public function login(Request $request)
         $data=$this->twoFA($user);
         return response()->json($data, $data['status']);
     }
+    try{
+        $token = JWTAuth::fromUser($user);
+        JWTAuth::parseToken()->authenticate();
 
-
-    $token = JWTAuth::fromUser($user);
+    }catch(\Exception $e){
+        $token = $this->generateToken($user);
+    }
+    // get existing token
+   
+     // create an Audit
     $auditData=[
         'user_id' => $user->id,
         'activity_type' => 'login',
     ];
-    // create an Audit
-    Audits::create($auditData);
+    $this->makeAudit($auditData);
     $data=[
         'status'=>200,
         'active'=>1,

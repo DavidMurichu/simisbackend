@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\auth;
 
 use App\Http\Controllers\Controller;
+use App\Traits\DemonTrait;
 use Illuminate\Http\Request;
 use App\Traits\AuthTrait;
 use Illuminate\Support\Str; 
 use App\Models\User;
+use App\Models\Audits;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -14,6 +16,7 @@ use Illuminate\Validation\ValidationException;
 class RegisterController extends Controller
 {
     use AuthTrait;
+    use DemonTrait;
     public function register(Request $request)
 {
     try{
@@ -38,7 +41,7 @@ class RegisterController extends Controller
     $user_details['password'] = Str::random(8);
     $user_details['created_by']=$request->admin_id;
     
-
+    
 
     //create user to the db
     $user = User::create($user_details);
@@ -47,9 +50,17 @@ class RegisterController extends Controller
     // //initialize 2FA
     $data=$this->send_reg_mail($user, $user_details['password']);
 
+    // create audit
+    $auditData=[
+        'user_id' => $user->id,
+        'activity_type' => 'register',
+    ];
+
+    $this->makeAudit($auditData);
+
 
     return response()->json($data, $data['status']);
-    // return response()->json($user, 200);
+    
 
 
 }

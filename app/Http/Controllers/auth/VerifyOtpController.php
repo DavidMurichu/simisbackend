@@ -4,6 +4,7 @@ namespace App\Http\Controllers\auth;
 
 use App\Http\Controllers\Controller;
 use App\Traits\AuthTrait;
+use App\Traits\DemonTrait;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Audits;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 class VerifyOtpController extends Controller
 {
     use AuthTrait;
+    use DemonTrait;
 
     public function otp_authenticate(Request $request)
     {
@@ -59,7 +61,7 @@ class VerifyOtpController extends Controller
                 'activity_type' => 'login',
             ];
             // create an Audit
-            Audits::create($auditData);
+            $this->makeAudit($auditData);
 
             return response()->json([
                 'status' => 200,

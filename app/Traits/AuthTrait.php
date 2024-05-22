@@ -30,7 +30,8 @@ trait AuthTrait
             return $token;
         } catch (JWTException $e) {
             // Handle token generation errors
-            return null;
+            Log::error($e->getMessage());
+            return response()->json($e->getMessage());
         }
     }
     public function getCustomClaims($user)
