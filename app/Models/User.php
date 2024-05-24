@@ -26,6 +26,7 @@ class User extends Authenticatable implements JWTSubject
         'department',
         'phone',
         'created_by',
+        'active'
         
 
     ];
@@ -77,5 +78,8 @@ class User extends Authenticatable implements JWTSubject
     public function role()
     {
         return $this->belongsTo(Role::class);
+    }
+    public function get_fillable(){
+        return $this->fillable;
     }
 }

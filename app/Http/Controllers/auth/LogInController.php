@@ -62,8 +62,9 @@ public function login(Request $request)
    
      // create an Audit
     $auditData=[
-        'user_id' => $user->id,
+        'user_name' => $user->name,
         'activity_type' => 'login',
+        'ip_address'=>$request->ip(),
     ];
     $this->makeAudit($auditData);
     $data=[

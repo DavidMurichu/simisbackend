@@ -6,7 +6,11 @@ use App\Http\Controllers\auth\VerifyOtpController;
 use App\Http\Controllers\auth\LogInController;
 use App\Http\Controllers\auth\LogOutController;
 use App\Http\Controllers\auth\ChangePasswordController;
+use App\Http\Controllers\giant\AddDataController;
+use App\Http\Controllers\giant\EditTableDetailsController;
+use App\Http\Controllers\giant\GetTableDetailsController;
 use App\Http\Controllers\giant\SchemaController;
+use App\Http\Controllers\test\LabController;
 use App\Http\Controllers\user\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,15 +36,19 @@ Route::post("/deactivate", [UserController::class, 'deactivate'])->middleware('j
 
 Route::group([
     'middleware'=> 'jwt.auth',
-    'prefix'=>'crud'
+    'prefix'=>'home'
 ],function () {
+//
+Route::get("/data/{tableName}", [GetTableDetailsController::class, 'get_table_data'])->middleware('jwt.auth');
+Route::post("/edit/{tableName}", [EditTableDetailsController::class, 'update'])->middleware('jwt.auth');
+Route::post("/create/{tableName}", [SchemaController::class, 'update'])->middleware('jwt.auth');
 
-Route::get("/data/{tableName}", [SchemaController::class, 'get_table_data'])->middleware('jwt.auth');
-Route::post("/edit/{tableName}", [SchemaController::class, 'update'])->middleware('jwt.auth');
-
+Route::post("/record/{tableName}", [AddDataController::class, 'create']);
 
 }
 );
 
 
-Route::get("/token", [PasswordController::class, 'getTableDataTypes']);
+Route::get("/token", [PasswordController::class, 'get_token']);
+Route::get("/home/lab", [LabController::class, 'getTableColumns']);
+// Route::get("/token", [PasswordController::class, 'get_token']);

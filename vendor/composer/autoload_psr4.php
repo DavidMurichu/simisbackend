@@ -56,6 +56,7 @@ return array(
     'Psr\\EventDispatcher\\' => array($vendorDir . '/psr/event-dispatcher/src'),
     'Psr\\Container\\' => array($vendorDir . '/psr/container/src'),
     'Psr\\Clock\\' => array($vendorDir . '/psr/clock/src'),
+    'Psr\\Cache\\' => array($vendorDir . '/psr/cache/src'),
     'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),
     'PhpOption\\' => array($vendorDir . '/phpoption/phpoption/src/PhpOption'),
     'PHPOpenSourceSaver\\JWTAuth\\' => array($vendorDir . '/php-open-source-saver/jwt-auth/src'),
@@ -88,6 +89,8 @@ return array(
     'Egulias\\EmailValidator\\' => array($vendorDir . '/egulias/email-validator/src'),
     'Dotenv\\' => array($vendorDir . '/vlucas/phpdotenv/src'),
     'Doctrine\\Inflector\\' => array($vendorDir . '/doctrine/inflector/lib/Doctrine/Inflector'),
+    'Doctrine\\Deprecations\\' => array($vendorDir . '/doctrine/deprecations/lib/Doctrine/Deprecations'),
+    'Doctrine\\DBAL\\' => array($vendorDir . '/doctrine/dbal/src'),
     'Doctrine\\Common\\Lexer\\' => array($vendorDir . '/doctrine/lexer/src'),
     'Dflydev\\DotAccessData\\' => array($vendorDir . '/dflydev/dot-access-data/src'),
     'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
@@ -97,5 +100,6 @@ return array(
     'Carbon\\Doctrine\\' => array($vendorDir . '/carbonphp/carbon-doctrine-types/src/Carbon/Doctrine'),
     'Carbon\\' => array($vendorDir . '/nesbot/carbon/src/Carbon'),
     'Brick\\Math\\' => array($vendorDir . '/brick/math/src'),
+    'App\\Models\\' => array($baseDir . '/app/Models'),
     'App\\' => array($baseDir . '/app', $vendorDir . '/laravel/pint/app'),
 );

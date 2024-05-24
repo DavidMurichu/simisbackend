@@ -57,8 +57,10 @@ class VerifyOtpController extends Controller
             $user->active=1;
             $user->save();
             $auditData=[
-                'user_id' => $user->id,
+                'user_name' => $user->name,
                 'activity_type' => 'login',
+        'ip_address'=>$request->ip(),
+
             ];
             // create an Audit
             $this->makeAudit($auditData);

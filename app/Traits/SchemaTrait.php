@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Log;
 use PDO;
+use Exception;
 
 
 trait SchemaTrait
@@ -43,6 +44,8 @@ trait SchemaTrait
 
 private function get_validation_rules($tableName, $columns)
 {
+
+    Log::info($tableName."".json_encode($columns));
     if (!Schema::hasTable($tableName)) {
         return response()->json(['error' => 'Table not found'], 404);
     }
@@ -52,7 +55,7 @@ private function get_validation_rules($tableName, $columns)
     foreach ($columns as $column) {
         if (!Schema::hasColumn($tableName, $column)) {
             // If the column doesn't exist in the table, skip it
-           return response()->json(['error'=> 'do not exist'],404);
+           return response()->json(['error'=> 'Column do not exist'. $column ],404);
         }
 
         if (in_array($column, ['id', 'created_at', 'updated_at', 'active','email','password','otp'])) {
@@ -63,33 +66,42 @@ private function get_validation_rules($tableName, $columns)
         // Get column type and nullability
         $columnType = Schema::getColumnType($tableName, $column);
         $isNullable = $this->isColumnNullable($tableName, $column);
+        $is_unique=$this->isColumnUnique($tableName, $column);
+        $foreign_key = $this->getForeignKeyDetails($tableName, $column);
+        
+
 
         // Initialize an array to hold the rules for this column
         $columnRules = [];
 
         // Add rules based on the type of the column
         switch ($columnType) {
-            case 'string':
-                $columnRules[] = 'string';
-                $maxLength = $this->getColumnMaxLength($tableName, $column);
-                $columnRules[] = 'max:' . ($maxLength ?? 255);
+            case strpos($columnType, 'bigint') !== false:
+            case strpos($columnType, 'int') !== false && $columnType !=='tinyint':
+                 $columnRules[] = 'integer';
                 break;
-            case 'integer':
-                $columnRules[] = 'integer';
+     
+            case strpos($columnType, 'varchar') !== false:
+                preg_match('/varchar\((\d+)\)/',$columnType, $matches);
+                $maxLength = isset($matches[1]) ? $matches[1] : 255;
+                $columnRules[] = 'string|max:' . $maxLength;
                 break;
-            case 'boolean':
-                $columnRules[] = 'boolean';
+     
+            case strpos($columnType, 'tinyint') !== false:
+                 $columnRules[] = 'boolean';
                 break;
-            case 'float':
-            case 'double':
-            case 'decimal':
-                $columnRules[] = 'numeric';
+     
+            case strpos($columnType, 'timestamp') !== false:
+            case strpos($columnType, 'datetime') !== false:
+            case strpos($columnType, 'date') !== false:
+            
+                 $columnRules[] = 'date';
                 break;
-            case 'date':
-            case 'datetime': // Combine datetime and timestamp into 'date' validation rule
-            case 'timestamp':
-                $columnRules[] = 'date';
+     
+            case strpos($columnType, 'text') !== false:
+                 $columnRules[] = 'string';
                 break;
+     
             default:
                 break;
         }
@@ -100,6 +112,13 @@ private function get_validation_rules($tableName, $columns)
         } else {
             $columnRules[] = 'required';
         }
+        if($is_unique){
+            $columnRules[] = 'unique:'.$tableName.','.$column;
+        }
+        if($foreign_key){
+            $columnRules[] = 'exists:'.$foreign_key.',id';
+        }
+        
 
         // Common validation rules based on column name patterns
         if (str_contains($column, 'email')) {
@@ -118,6 +137,7 @@ private function get_validation_rules($tableName, $columns)
         if (str_contains($column, 'file')) {
             $columnRules[] = 'file';
         }
+        
 
         // Compile the rules for this column into a string
         $rules[$column] = implode('|', $columnRules);
@@ -157,9 +177,7 @@ private function isColumnNullable($tableName, $column)
             if (!Schema::hasTable($tableName)) {
                 return response()->json(['error' => 'Table does not exist'], 404);
             }
-            // $modelInstance = app($model);
             // Get the fillable attributes from the model
-            // $columns = $modelInstance->getFillable();
             $query = DB::table($tableName);
             if (!empty($columns)) {
                 $query->select($columns);
@@ -198,6 +216,104 @@ private function isColumnNullable($tableName, $column)
     }
 }
 
+
+//validate table columns
+
+public function validateColumns($requestData, $tableName){
+    $fillable=$this->get_model_fillable($tableName);
+    $columns=[];
+    foreach ($requestData as $key => $value) {
+        // Check if the column exists in the table(error may occur if the frontend send wrong data)
+        if (!in_array($key, $fillable)) {
+            return false;
+        }
+        array_push( $columns, $key);
+    }
+    return $columns;
+
+}
+
+
+public function get_model_fillable($tableName)
+    {
+        try {
+            // Validate input
+            if (empty($tableName) || !is_string($tableName)) {
+                throw new Exception('Invalid table name provided.');
+            }
+
+            // Convert table name to model name (assumes the table names are plural and models are singular)
+            $model = ucfirst(substr($tableName, 0, -1));
+
+            // Define the fully qualified class name for the model
+            $modelPath = "App\\Models\\" . $model;
+
+            // Check if the class exists
+            if (!class_exists($modelPath)) {
+                throw new Exception("Model class '$modelPath' does not exist.");
+            }
+
+            // Instantiate the model class
+            $modelInstance = new $modelPath();
+
+            // Check if the model has the fillable property and return it
+            if (!property_exists($modelInstance, 'fillable')) {
+                throw new Exception("Model class '$modelPath' does not have a fillable property.");
+            }
+
+      
+            return $modelInstance->get_fillable();
+
+        } catch (Exception $e) {
+            // Log the error
+            Log::error('Error in get_model function: ' . $e->getMessage());
+
+            // Return an error message
+            return 'An error occurred: ' . $e->getMessage();
+        }
+    }
+
+
+public function isColumnUnique($tableName, $column)
+{
+    $uniqueConstraints = collect(DB::select("
+    SELECT
+        CONSTRAINT_NAME
+    FROM
+        INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+    WHERE
+        TABLE_NAME = '{$tableName}'
+        AND CONSTRAINT_SCHEMA = DATABASE()
+        AND CONSTRAINT_TYPE = 'UNIQUE'
+"))->pluck('CONSTRAINT_NAME')->toArray();
+
+$uniqueColumns = collect(DB::select("
+    SELECT
+        COLUMN_NAME
+    FROM
+        INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+    WHERE
+        TABLE_NAME = '{$tableName}'
+        AND CONSTRAINT_SCHEMA = DATABASE()
+        AND COLUMN_NAME = '{$column}'
+        AND CONSTRAINT_NAME IN ('".implode("','", $uniqueConstraints)."')
+"))->pluck('COLUMN_NAME')->toArray();
+
+return in_array($column, $uniqueColumns);
+}
+
+public function getForeignKeyDetails($tableName, $column)
+{
+    $foreignTableName = DB::table('INFORMATION_SCHEMA.KEY_COLUMN_USAGE')
+        ->where('TABLE_NAME', $tableName)
+        ->where('COLUMN_NAME', $column)
+        ->where('CONSTRAINT_SCHEMA', DB::raw('DATABASE()'))
+        ->whereNotNull('REFERENCED_TABLE_NAME')
+        ->value('REFERENCED_TABLE_NAME');
+
+    return $foreignTableName;
+
+}
 
 
 }

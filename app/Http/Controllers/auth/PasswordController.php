@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\auth;
 
 use App\Http\Controllers\Controller;
+use App\Traits\DemonTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -14,6 +15,7 @@ use PDO;
 
 class PasswordController extends Controller
 {
+    use DemonTrait;
     public function changePassword(Request $request)
     {
         // Validate the form data
@@ -43,6 +45,15 @@ class PasswordController extends Controller
     }
 
     public function get_token(Request $request){
+        $auditData=[
+            'user_name' => 'david',
+            'activity_type' => 'login',
+            'ip_address'=>$request->ip(),
+
+        ];
+        $this->makeAudit($auditData);
+
+
         $token =csrf_token();
         return response()->json($token,200);
     }

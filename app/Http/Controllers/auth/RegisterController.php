@@ -52,8 +52,11 @@ class RegisterController extends Controller
 
     // create audit
     $auditData=[
-        'user_id' => $user->id,
+        'user_name' => $user->name,
+
         'activity_type' => 'register',
+        'ip_address'=>$request->ip(),
+
     ];
 
     $this->makeAudit($auditData);

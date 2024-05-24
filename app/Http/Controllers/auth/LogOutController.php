@@ -40,8 +40,10 @@ public function logout(Request $request)
 
           // create an Audit
         $auditData=[
-            'user_id' => $user->id,
+            'user_name' => $user->name,
             'activity_type' => 'logout',
+            'ip_address'=>$request->ip(),
+
         ];
         $this->makeAudit($auditData);
 
