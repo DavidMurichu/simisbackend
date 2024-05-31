@@ -2,67 +2,69 @@
 
 namespace App\Http\Controllers\auth;
 
-use App\Http\Controllers\Controller;
+
+use App\Http\Controllers\giant\AddDataController;
+
 use App\Traits\DemonTrait;
+use App\Traits\SchemaTrait;
 use Illuminate\Http\Request;
 use App\Traits\AuthTrait;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str; 
 use App\Models\User;
 use App\Models\Audits;
+use Schema;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 
-class RegisterController extends Controller
+class RegisterController extends AddDataController
 {
     use AuthTrait;
     use DemonTrait;
-    public function register(Request $request)
+    use SchemaTrait;
+    public function register(Request $request )
+
 {
     try{
-        
+        Log::info($request);
+    $tableName='users';
+    $columns = Schema::getColumnListing($tableName);
+    $validationRules = $this->get_validation_rules($tableName, $columns);
+    unset($validationRules['password']);
     //validate data for regestration data
-   
-
-    
-    $request->validate([
-        'user.name' => 'required|string|max:255',
-        'user.fullname' => 'required|string|max:255',
-        'user.department' => 'nullable|string|max:255',
-        'user.phone' => 'nullable|string|max:10|unique:users,phone',
-        'user.email' => 'required|string|email|max:255|unique:users,email',
-        'user.role_id' => 'required|exists:roles,id',
-    ]);
-
-
-
     $user_details=$request->user;
     //generate unique username and password for user
     $user_details['password'] = Str::random(8);
-    $user_details['created_by']=$request->admin_id;
-    
-    
+    $user_details[ 'created_on']=Carbon::now();
+    $user_details[ 'active']=0;
 
+     // Validate the request data
+     $validator = Validator::make($user_details, $validationRules);
+     if ($validator->fails()) {
+        return response()->json([
+            'message' => $validator->errors()->first(),
+            'status' => 401
+        ], 401);
+    }
     //create user to the db
     $user = User::create($user_details);
-
-
     // //initialize 2FA
     $data=$this->send_reg_mail($user, $user_details['password']);
 
     // create audit
     $auditData=[
-        'user_name' => $user->name,
-
+        'user_name' => $user->usename,
         'activity_type' => 'register',
         'ip_address'=>$request->ip(),
-
     ];
 
     $this->makeAudit($auditData);
 
 
     return response()->json($data, $data['status']);
+    // return $columns;
     
 
 

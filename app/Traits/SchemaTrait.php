@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Log;
+use Str;
 use PDO;
 use Exception;
 
@@ -42,6 +43,45 @@ trait SchemaTrait
 //             // }
 //         }
 
+
+public function getDataByTableIdAndColumns($table, $id, $columns)
+{
+    try {
+        // Check if the table exists
+        if (!Schema::hasTable($table)) {
+            $data=[
+                "message"=>'Table does not exist',
+                "status"=>401
+            ];
+            return $data;
+        }
+
+     
+
+        // Ensure the columns exist in the table
+        $tableColumns = Schema::getColumnListing($table);
+        foreach ($columns as $column) {
+            if (!in_array($column, $tableColumns)) {
+                return response()->json(['error' => "Column $column does not exist in table $table"], 400);
+            }
+        }
+
+        // Query the table for the given ID and select the specified columns
+        $data = DB::table($table)->select($columns)->where('id', $id)->first();
+
+        // Check if data was found
+        if (!$data) {
+            return response()->json(['error' => 'Record not found'], 404);
+        }
+
+        // Return the data
+        return response()->json($data, 200);
+    } catch (\Exception $e) {
+        // Log and return the error
+        \Log::error($e->getMessage());
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
 private function get_validation_rules($tableName, $columns)
 {
 
@@ -58,7 +98,7 @@ private function get_validation_rules($tableName, $columns)
            return response()->json(['error'=> 'Column do not exist'. $column ],404);
         }
 
-        if (in_array($column, ['id', 'created_at', 'updated_at', 'active','email','password','otp'])) {
+        if (in_array($column, ['id', 'created_at', 'updated_at'])) {
             // Skip these special columns
             continue;
         }
@@ -106,6 +146,7 @@ private function get_validation_rules($tableName, $columns)
                 break;
         }
 
+       
         // Add nullable or required rule based on column nullability
         if ($isNullable) {
             $columnRules[] = 'nullable';
@@ -116,7 +157,7 @@ private function get_validation_rules($tableName, $columns)
             $columnRules[] = 'unique:'.$tableName.','.$column;
         }
         if($foreign_key){
-            $columnRules[] = 'exists:'.$foreign_key.',id';
+            $columnRules[] = 'exists:'. $foreign_key;
         }
         
 
@@ -137,6 +178,12 @@ private function get_validation_rules($tableName, $columns)
         if (str_contains($column, 'file')) {
             $columnRules[] = 'file';
         }
+            // Check if the column is of ENUM type
+        if ($this->isEnumColumn($tableName, $column)) {
+            $enumValues = $this->getEnumValues($tableName, $column);
+            $columnRules[] = 'in:' . implode(',', $enumValues);
+        }
+
         
 
         // Compile the rules for this column into a string
@@ -146,6 +193,25 @@ private function get_validation_rules($tableName, $columns)
     return $rules;
  
 }
+
+
+
+// Check if a column is of ENUM type
+protected function isEnumColumn($tableName, $column)
+{
+    $type = DB::select("SHOW COLUMNS FROM {$tableName} WHERE Field = ?", [$column])[0]->Type;
+    return strpos($type, 'enum') === 0;
+}
+
+// Get ENUM values for a column
+protected function getEnumValues($tableName, $column)
+{
+    $type = DB::select("SHOW COLUMNS FROM {$tableName} WHERE Field = ?", [$column])[0]->Type;
+    preg_match('/^enum\((.*)\)$/', $type, $matches);
+    $enumValues = str_getcsv($matches[1], ',', "'");
+    return $enumValues;
+}
+
 
 private function getColumnMaxLength($tableName, $column)
 {
@@ -243,8 +309,7 @@ public function get_model_fillable($tableName)
             }
 
             // Convert table name to model name (assumes the table names are plural and models are singular)
-            $model = ucfirst(substr($tableName, 0, -1));
-
+            $model = Str::singular(Str::studly($tableName)); 
             // Define the fully qualified class name for the model
             $modelPath = "App\\Models\\" . $model;
 
@@ -304,15 +369,30 @@ return in_array($column, $uniqueColumns);
 
 public function getForeignKeyDetails($tableName, $column)
 {
-    $foreignTableName = DB::table('INFORMATION_SCHEMA.KEY_COLUMN_USAGE')
-        ->where('TABLE_NAME', $tableName)
-        ->where('COLUMN_NAME', $column)
-        ->where('CONSTRAINT_SCHEMA', DB::raw('DATABASE()'))
-        ->whereNotNull('REFERENCED_TABLE_NAME')
-        ->value('REFERENCED_TABLE_NAME');
+    $schema = DB::connection()->getDatabaseName(); // Get current database name
 
-    return $foreignTableName;
+    try {
+        $foreignKeys = DB::table('information_schema.KEY_COLUMN_USAGE AS kcu')
+            ->select('kcu.REFERENCED_TABLE_NAME', 'kcu.REFERENCED_COLUMN_NAME')
+            ->join('information_schema.TABLES AS t', function ($join) use ($schema) {
+                $join->on('t.TABLE_NAME', '=', 'kcu.TABLE_NAME')
+                    ->where('t.TABLE_SCHEMA', '=', $schema);
+            })
+            ->where('kcu.TABLE_NAME', $tableName)
+            ->where('kcu.COLUMN_NAME', $column)
+            ->whereNotNull('kcu.REFERENCED_TABLE_NAME')
+            ->first();
 
+        if ($foreignKeys) {
+            return $foreignKeys->REFERENCED_TABLE_NAME . ',' . $foreignKeys->REFERENCED_COLUMN_NAME;
+        }
+
+        return null;
+    } catch (\Exception $e) {
+        // Log or handle the exception here
+        Log::error("Error fetching foreign key details: " . $e->getMessage());
+        return null;
+    }
 }
 
 

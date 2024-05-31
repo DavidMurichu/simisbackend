@@ -41,7 +41,7 @@
 <body>
     <div class="container">
         <h1>Your One-Time Password (OTP) Code</h1>
-        <p>Hi {{ $user->name }},</p>
+        <p>Hi {{ $user->username }},</p>
         <p>A one-time password (OTP) has been requested for your account.</p>
         <p class="otp-code">Your OTP code is: {{ $otpCode }}</p>
         <p>If you did not request an OTP code, please disregard this email.</p>

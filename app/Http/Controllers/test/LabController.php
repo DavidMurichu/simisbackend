@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Log;
+use Str;
 
 class LabController extends Controller
 {
@@ -16,7 +17,7 @@ class LabController extends Controller
 
     public function getTableColumns(Request $request)
     {
-        $tableName='students';
+        $tableName='sch_student_class_terms';
         // Check if the table exists
         if (!Schema::hasTable($tableName)) {
             throw new \Exception("Table '$tableName' does not exist.");
@@ -41,7 +42,8 @@ class LabController extends Controller
 
         // $dataType=$this->createValidationRules($columnDetails);
         $data=$this->get_validation_rules($tableName, $columnDetails);
-        // $is_foreignkey=$this->getForeignKeyDetails($tableName, 'parent_id');
+        
+        $is_foreignkey=$this->getForeignKeyDetails($tableName, 'parent_id');
         
         
         return $data;
@@ -174,14 +176,30 @@ return in_array($column, $uniqueColumns);
 
 public function getForeignKeyDetails($tableName, $column)
 {
-    $foreignTableName = DB::table('INFORMATION_SCHEMA.KEY_COLUMN_USAGE')
-        ->where('TABLE_NAME', $tableName)
-        ->where('COLUMN_NAME', $column)
-        ->where('CONSTRAINT_SCHEMA', DB::raw('DATABASE()'))
-        ->whereNotNull('REFERENCED_TABLE_NAME')
-        ->value('REFERENCED_TABLE_NAME');
+    $schema = DB::connection()->getDatabaseName(); // Get current database name
 
-    return $foreignTableName;
+    try {
+        $foreignKeys = DB::table('information_schema.KEY_COLUMN_USAGE AS kcu')
+            ->select('kcu.REFERENCED_TABLE_NAME', 'kcu.REFERENCED_COLUMN_NAME')
+            ->join('information_schema.TABLES AS t', function ($join) use ($schema) {
+                $join->on('t.TABLE_NAME', '=', 'kcu.TABLE_NAME')
+                    ->where('t.TABLE_SCHEMA', '=', $schema);
+            })
+            ->where('kcu.TABLE_NAME', $tableName)
+            ->where('kcu.COLUMN_NAME', $column)
+            ->whereNotNull('kcu.REFERENCED_TABLE_NAME')
+            ->first();
+
+        if ($foreignKeys) {
+            return $foreignKeys->REFERENCED_TABLE_NAME . ',' . $foreignKeys->REFERENCED_COLUMN_NAME;
+        }
+
+        return null;
+    } catch (\Exception $e) {
+        // Log or handle the exception here
+        Log::error("Error fetching foreign key details: " . $e->getMessage());
+        return null;
+    }
 
 }
   

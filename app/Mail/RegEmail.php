@@ -23,6 +23,7 @@ class RegEmail extends Mailable
 
     public function build()
     {
+        
         return $this->subject('Your username and password')
                     ->view('emails.senduserdetails') 
                     ->with('username', $this->username)

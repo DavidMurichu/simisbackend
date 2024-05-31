@@ -15,7 +15,7 @@ class EditTableDetailsController extends Controller
     public function update(Request $request , $tableName){
         
         //Check if operationis allowed
-        $allowed=['users', 'clients'];
+        $allowed=['users', 'clients', 'auth_branches'];
         if(!in_array($tableName,$allowed)){
             $data=[
                 'message'=>'unauthorized edit',
@@ -31,7 +31,6 @@ class EditTableDetailsController extends Controller
             $data=[
                 'message'=>'Unauthorized ',
                 'status'=>401,
-                
             ];
             return response()->json($data, 401);
         }
@@ -69,7 +68,6 @@ class EditTableDetailsController extends Controller
         // Perform the update
         try {
             DB::table($tableName)->where('id', $id)->update($data_to_update);
-            
             Log::info('updated '.$id);
             return response()->json(['success' => 'Record updated successfully'], 200);
         } catch (\Exception $e) {

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-use App\Models\Role;
+use App\Models\AuthBranch;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -18,17 +18,30 @@ class User extends Authenticatable implements JWTSubject
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-        'email',
+        'view_all',
+        'ip_address',
+        'username',
         'password',
-        'role_id',
-        'fullname',
-        'department',
+        'zoneid',
+        'password_reset_code',
+        'password_reset_time',
+        'salt',
+        'activation_code',
+        'forgotten_password_code',
+        'forgotten_password_time',
+        'remember_code',
+        'created_on',
+        'last_login',
+        'first_name',
+        'last_name',
+        'company',
         'phone',
-        'created_by',
+        'levelid',
+        'employeeid',
+        'memberid',
+        'branch_id',
+        'email',
         'active'
-        
-
     ];
 
     /**
@@ -68,18 +81,31 @@ class User extends Authenticatable implements JWTSubject
      */
     public function getJWTCustomClaims()
     {
+        $this->load('authBranch');
+        $branchName = $this->authBranch ? $this->authBranch->branch_name : null;
         return [
-            'username' => $this->name,
-            'role' => $this->role->role,
+            'username' => $this->username,
+            'branch_name'=>$branchName,
             'active' => $this->active ? 'active' : 'inactive',
             'user_id' => $this->id,
         ];
     }
-    public function role()
+    public function authBranch()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(AuthBranch::class,'branch_id');
     }
     public function get_fillable(){
-        return $this->fillable;
+        $restricted=[  'password',
+        'password_reset_code',
+        'password_reset_time',
+        'salt',
+        'activation_code',
+        'forgotten_password_code',
+        'forgotten_password_time',
+        'remember_code',
+        'created_on',
+        'last_login',];
+        $columns=array_diff($this->fillable, $restricted);
+        return $columns;
     }
 }

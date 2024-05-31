@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Schema;
 use Log;
 use Exception;
+use Str;
 
 class AddDataController extends Controller
 {
@@ -21,6 +22,16 @@ class AddDataController extends Controller
     public function create(Request $request, $tableName)
     {
         try {
+
+            Log::info($request->all());
+            $allowed=config('crud.create');
+            if(!in_array($tableName,$allowed)){
+                $data=[
+                    'message'=>'unauthorized request',
+                    'status'=>401
+                ];
+                return response()->json($data, 401);
+            }
             // Ensure table name is valid and model exists
             if (!$this->isValidTableName($tableName)) {
                 throw new Exception("Invalid table name provided.");
@@ -33,8 +44,11 @@ class AddDataController extends Controller
             // Validate the request data
             $validator = Validator::make($request->all(), $validationRules);
            
+    
            
             if ($validator->fails()) {
+                Log::error($validator->messages());
+                Log::error($request->all());
                 return response()->json([
                     'message' => $validator->errors()->first(),
                     'status' => 401
@@ -44,7 +58,7 @@ class AddDataController extends Controller
             
 
             // Convert table name to model name
-            $model = ucfirst(substr($tableName, 0, -1));
+            $model = Str::singular(Str::studly($tableName)); 
             $modelPath = "App\\Models\\" . $model;
 
             // // Check if the class exists

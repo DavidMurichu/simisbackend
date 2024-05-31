@@ -24,10 +24,10 @@ class LogInController extends Controller
 public function login(Request $request)
 {
 
-    try {
+    // try {
         //Step 1 Validate and sanitize request data
         $request->validate([
-            'email' => ['required', 'email', 'string', 'max:255'],
+            'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8'],
         ]);
 
@@ -56,6 +56,7 @@ public function login(Request $request)
         JWTAuth::parseToken()->authenticate();
 
     }catch(\Exception $e){
+        Log::error($e->getMessage());
         $token = $this->generateToken($user);
     }
     // get existing token
@@ -75,13 +76,13 @@ public function login(Request $request)
     return response()->json($data,200);
     
 
-    } catch (\Exception $e) {
-        Log::error('Login error: ' . $e->getMessage());
-        $data=[
-            'message'=>'Some error occured Try again later',
-            'status'=> 500
-        ];
-        return response()->json($data, 500);
-    }
+    // } catch (\Exception $e) {
+    //     Log::error('Login error: ' . $e->getMessage());
+    //     $data=[
+    //         'message'=>'Some error occured Try again later',
+    //         'status'=> 500
+    //     ];
+    //     return response()->json($data, 500);
+    // }
 }
 }

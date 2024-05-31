@@ -4,6 +4,7 @@ namespace App\Traits;
 
 
 use App\Mail\RegEmail;
+use App\Models\AuthBranch;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Exceptions\JWTException;
@@ -36,13 +37,14 @@ trait AuthTrait
     }
     public function getCustomClaims($user)
     {
-        $role= Role::find($user->role_id)->role;
+        $branch_name= AuthBranch::find($user->branch_id)->branch_name;
+        Log::info($branch_name);
         // Define custom claims to include in the token payload
 
         $data=[
             
-            'username' => $user->name,
-            'role' => $role, 
+            'username' => $user->username,
+            'branch_name' => $branch_name, 
             'active' => $user->active ? 'active' : 'inactive',
             'user_id' => $user->id,
             'exp' => Carbon::now()->addHours(24)->timestamp
@@ -76,7 +78,16 @@ trait AuthTrait
     public function send_reg_mail( $user, $password){
         // Send logins via email
         try {
-        Mail::to($user->email)->send(new RegEmail($user->email, $password));
+        Mail::to($user->email)->send(new RegEmail($user->username, $password));
+        // create audit
+        $auditData=[
+            'user_name' => $user->username,
+            'activity_type' => 'email with register details sent',
+           
+
+        ];
+
+        $this->makeAudit($auditData);
         $data=[
             'message'=>'Login sent to your email. Please check and enter the code to proceed.',
             'status'=>200
