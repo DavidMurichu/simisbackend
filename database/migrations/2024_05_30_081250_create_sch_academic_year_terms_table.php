@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('description', 250)->nullable();
             $table->date('startdate')->nullable();
             $table->date('enddate')->nullable();
+            $table->string('ipaddress')->nullable();
             $table->enum('is_active', ['0', '1'])->default('1');
             $table->foreign('academicyear')->references('name')->on('sch_academic_years');
             $table->foreign('term')->references('name')->on('sch_terms');

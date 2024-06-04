@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('user_name');
             $table->string('activity_type');
             $table->timestamp('activity_time')->nullable();
-            $table->string('ip_address')->nullable();
+            $table->string('ipaddress')->nullable();
             $table->string('user_agent')->nullable();
             $table->text('additional_info')->nullable();
             $table->timestamps();

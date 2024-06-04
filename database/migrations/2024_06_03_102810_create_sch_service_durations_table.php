@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sys_years', function (Blueprint $table) {
-            $table->id();
-            $table->string('ipaddress')->nullable();
-            $table->string('year', 32)->comment('Year Name')->unique();
+        Schema::create('sch_service_durations', function (Blueprint $table) {
+            $table->id('id');
+            $table->string('name', 100)->comment('Duration Name')->unique();
+            $table->text('description')->nullable()->comment('Description');
+            $table->integer('createdby')->nullable();
+            $table->integer('lasteditedby')->nullable();
+            $table->string('ipaddress', 32)->nullable();
             $table->enum('is_active', ['0', '1'])->default('1')->comment('Is Active');
             $table->timestamps();
         });
@@ -25,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sys_years');
+        Schema::dropIfExists('sch_service_durations');
     }
 };

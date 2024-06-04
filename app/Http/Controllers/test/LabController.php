@@ -10,14 +10,71 @@ use Illuminate\Support\Facades\DB;
 use Log;
 use Str;
 
+use Illuminate\Database\Eloquent\Model;
+use Exception;
+
 class LabController extends Controller
 {
     use SchemaTrait;
 
 
+
+    public function getForeignTableData($tableName, $columnName, $foreignKeyValue, $foreignColumnName)
+    {
+        // Query to retrieve foreign key information from information_schema
+        $foreignKeyInfo = DB::selectOne("
+            SELECT
+                kcu.REFERENCED_TABLE_NAME AS foreign_table,
+                kcu.REFERENCED_COLUMN_NAME AS foreign_column
+            FROM
+                information_schema.KEY_COLUMN_USAGE kcu
+            WHERE
+                kcu.TABLE_NAME = ? 
+                AND kcu.COLUMN_NAME = ?
+                AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
+        ", [$tableName, $columnName]);
+
+        // Check if foreign key information was found
+        if (!$foreignKeyInfo) {
+            throw new Exception('No foreign key found for the specified column in the given table.');
+        }
+
+        $foreignTableName = $foreignKeyInfo->foreign_table;
+        $foreignTableColumnName = $foreignKeyInfo->foreign_column;
+
+        // Define a dynamic Eloquent model for the foreign table
+        $foreignModel = new class extends Model {
+            protected $table;
+            public $timestamps = false;
+        };
+
+        $foreignModel->setTable($foreignTableName);
+
+        // Fetch the specified column's data from the foreign table
+        $data = $foreignModel->where($foreignTableColumnName, $foreignKeyValue)->value($foreignColumnName);
+
+        return $data;
+    }
+
+    // Method to test the functionality
+    public function testGetForeignTableData()
+    {
+        $tableName = 'orders';
+        $columnName = 'branch_id';
+        $foreignKeyValue = 1;
+        $foreignColumnName = 'name';
+
+        try {
+            $data = $this->getForeignTableData($tableName, $columnName, $foreignKeyValue, $foreignColumnName);
+            echo $data;
+        } catch (\Exception $e) {
+            echo "Error: " . $e->getMessage();
+        }
+    }
+
     public function getTableColumns(Request $request)
     {
-        $tableName='sch_student_class_terms';
+        $tableName='sch_students';
         // Check if the table exists
         if (!Schema::hasTable($tableName)) {
             throw new \Exception("Table '$tableName' does not exist.");
@@ -201,6 +258,7 @@ public function getForeignKeyDetails($tableName, $column)
         return null;
     }
 
+    
 }
   
 }

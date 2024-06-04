@@ -48,6 +48,8 @@ class SchStudent extends Model
     "genderid",
     "branch_id"
     ];
+
+    
     public function get_fillable(){
         return $this->fillable;
     }

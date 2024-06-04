@@ -5,6 +5,7 @@ use App\Http\Controllers\giant\AddDataController;
 use App\Http\Controllers\giant\DeleteController;
 use App\Http\Controllers\giant\EditTableDetailsController;
 use App\Http\Controllers\giant\GetTableDetailsController;
+use App\Http\Controllers\giant\MassAddController;
 
 Route::group([
     // 'middleware'=> 'jwt.auth',
@@ -16,6 +17,5 @@ Route::get("/get_data/{tableName}", [GetTableDetailsController::class, 'get_tabl
 Route::post("/edit/{tableName}", [EditTableDetailsController::class, 'update']);
 Route::post("/delete/{tableName}", [DeleteController::class, 'delete']);
 Route::post("/add_data/{tableName}", [AddDataController::class, 'create']);
-
 }
 );

@@ -20,18 +20,20 @@ class AddDataController extends Controller
     use DemonTrait;
 
     public function create(Request $request, $tableName)
-    {
+{
+    // Handle both single entry and multiple entries
+    $dataEntries = isset($request->all()[0]) ? $request->all() : [$request->all()];
+    $results = [];
+    
+    // Iterate over each data entry
+    foreach ($dataEntries as $data) {
         try {
-
-            Log::info($request->all());
-            $allowed=config('crud.create');
-            if(!in_array($tableName,$allowed)){
-                $data=[
-                    'message'=>'unauthorized request',
-                    'status'=>401
-                ];
-                return response()->json($data, 401);
+            Log::info($data);
+            $allowed = config('crud.create');
+            if (!in_array($tableName, $allowed)) {
+                throw new Exception('Unauthorized request', 401);
             }
+
             // Ensure table name is valid and model exists
             if (!$this->isValidTableName($tableName)) {
                 throw new Exception("Invalid table name provided.");
@@ -42,69 +44,67 @@ class AddDataController extends Controller
             $validationRules = $this->get_validation_rules($tableName, $columns);
 
             // Validate the request data
-            $validator = Validator::make($request->all(), $validationRules);
-           
-    
-           
+            $validator = Validator::make($data, $validationRules);
+
             if ($validator->fails()) {
                 Log::error($validator->messages());
-                Log::error($request->all());
-                return response()->json([
-                    'message' => $validator->errors()->first(),
-                    'status' => 401
-                ], 401);
+                Log::error($data);
+                $results[] = [
+                    'status' => 'error' ,
+                    'message' => $validator->errors()->first()
+                ];
+                continue; // Skip to the next entry
             }
 
-            
-
             // Convert table name to model name
-            $model = Str::singular(Str::studly($tableName)); 
+            $model = Str::singular(Str::studly($tableName));
             $modelPath = "App\\Models\\" . $model;
 
-            // // Check if the class exists
+            // Check if the class exists
             if (!class_exists($modelPath)) {
                 throw new Exception("Model class '$modelPath' does not exist.");
             }
 
-            
-
             // Instantiate the model class and create the record
             $modelInstance = new $modelPath();
-          
-            
-            $modelInstance::create($request->all());
-         
+            $data['ipaddress'] = request()->ip();
+            $modelInstance::create($data);
 
-           
-           
-            $auditData=[
+            // Audit logging
+            $auditData = [
                 'user_name' => $model,
                 'activity_type' => 'table update',
-                'ip_address'=>$request->ip(),
+                'ip_address' => request()->ip(),
             ];
             $this->makeAudit($auditData);
-            // Return a success response
-            return response()->json([
-                'message' => 'Data created successfully',
-                'status' => 201
-            ], 201);
+
+            // Record successful creation
+            $results[] = [
+                'status' => 'success',
+                'message' => 'Data created successfully'
+            ];
 
         } catch (ValidationException $e) {
-            // Handle validation exceptions
-            return response()->json([
-                'message' => $e->validator->errors()->first(),
-                'status' => 422
-            ], 422);
+            $results[] = [
+                'status' => 'error',
+                'message' => $e->validator->errors()->first()
+            ];
 
         } catch (Exception $e) {
-            // Log other exceptions and return a generic error response
             Log::error('Error creating data: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'An error occurred while creating data.',
-                'status' => 500
-            ], 500);
+            $status = $e->getCode() ?: 500;
+            $results[] = [
+                'status' => 'error',
+                'message' => 'An error occurred while creating data.'
+            ];
         }
     }
+
+    $overallStatus = collect($results)->contains('status', 'error') ? 401 : 201;
+
+    // Return all results
+    return response()->json($results, $overallStatus);
+}
 
     /**
      * Validate if the provided table name is valid

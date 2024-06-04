@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id('id');
             $table->boolean('view_all')->default(false)->comment('View All Branches');
-            $table->string('ip_address', 45)->nullable();
+            $table->string('ipaddress', 45)->nullable();
             $table->string('username', 100);
             $table->string('password', 255);
             $table->unsignedBigInteger('zoneid')->nullable();
