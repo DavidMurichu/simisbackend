@@ -19,7 +19,6 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $fillable = [
         'view_all',
-        'ip_address',
         'username',
         'password',
         'zoneid',
@@ -41,7 +40,10 @@ class User extends Authenticatable implements JWTSubject
         'memberid',
         'branch_id',
         'email',
-        'active'
+        'active',
+        'ipaddress',
+        'created_at',
+        'updated_at',
     ];
 
     /**

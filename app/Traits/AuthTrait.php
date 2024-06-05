@@ -83,6 +83,7 @@ trait AuthTrait
         $auditData=[
             'user_name' => $user->username,
             'activity_type' => 'email with register details sent',
+            'ipaddress'=>"127.0.0:Demon"
            
 
         ];

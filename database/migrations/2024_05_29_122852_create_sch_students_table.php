@@ -43,15 +43,21 @@ return new class extends Migration
             $table->string('last_school_attended', 255)->nullable()->comment('Last School Attended');
             $table->string('birth_cert_no', 32)->nullable()->comment('Birth Certificate No');
             $table->string('upi_no', 32)->nullable()->comment('Upi No');
-            $table->integer('academicyearid')->nullable()->comment('Join Academic Year');
-
+            $table->string('academicyearid')->nullable()->comment('Join Academic Year');
+            $table->string('prev_class_id');
+            $table->string('current_class_id');
+            $table->string('current_term_id');
+            $table->string('transfer_term_id');
+            $table->string('genderid');
+            $table->string('branch_id');
             // Foreign Keys
-            $table->foreignId('prev_class_id')->constrained('sch_classes')->comment('Join Class');
-            $table->foreignId('current_class_id')->constrained('sch_classes')->comment('Current Class')->nullable();
-            $table->foreignId('current_term_id')->constrained('sch_terms')->comment('Current Term')->nullable();
-            $table->foreignId('transfer_term_id')->constrained('sch_terms')->nullable()->comment('Term Transferred');
-            $table->foreignId('genderid')->constrained('sch_student_genders')->nullable()->comment('Gender');
-            $table->foreignId('branch_id')->constrained('auth_branches')->nullable()->comment('Branch Name');
+            $table->foreign('academicyearid')->references('name')->on('sch_academic_years');
+            $table->foreign('prev_class_id')->references('name')->on('sch_classes');
+            $table->foreign('current_class_id')->references('name')->on('sch_classes');
+            $table->foreign('current_term_id')->references('name')->on('sch_terms');
+            $table->foreign('transfer_term_id')->references('name')->on('sch_terms');
+            $table->foreign('genderid')->references('name')->on('sch_student_genders');
+            $table->foreign('branch_id')->references('branch_name')->on('auth_branches');
             $table->timestamps();
             
             // Indexes

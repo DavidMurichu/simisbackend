@@ -19,7 +19,7 @@ Route::group([
 
 Route::post("/2FAcode", [VerifyOtpController::class, 'otp_authenticate']);
 Route::post('/login', [LogInController::class, 'login']);
-Route::post("/register", [RegisterController::class, "register"])->middleware('jwt.auth');
+Route::post("/register", [RegisterController::class, "register"]);
 Route::post("changepassword", [PasswordController::class, 'changePassword'])->middleware('jwt.auth');
 Route::post("/logout", [LogOutController::class, 'logout'])->middleware('jwt.auth');
 Route::post("/deactivate", [UserController::class, 'deactivate'])->middleware('jwt.auth');
@@ -34,6 +34,6 @@ Route::post("/deactivate", [UserController::class, 'deactivate'])->middleware('j
 
 
 Route::get("/token", [PasswordController::class, 'get_token']);
-Route::get("/home/lab", [LabController::class, 'getTableColumns']);
+Route::get("/home/lab", [LabController::class, 'get_table_data']);
 
 // Route::get("/token", [PasswordController::class, 'get_token']);

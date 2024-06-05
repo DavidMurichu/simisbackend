@@ -12,9 +12,11 @@ class Audit extends Model
         'user_name',
         'activity_type',
         'activity_time',
-        'ip_address',
+        'ipaddress',
         'user_agent',
         'additional_info',
+        'created_at',
+        'updated_at'
     ];
 
     public function user()

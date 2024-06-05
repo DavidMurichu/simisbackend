@@ -13,7 +13,7 @@ Route::group([
 ],function () {
 //
 
-Route::get("/get_data/{tableName}", [GetTableDetailsController::class, 'get_table_data']);
+Route::get("/get_data/{tableName}/{id?}", [GetTableDetailsController::class, 'get_table_data']);
 Route::post("/edit/{tableName}", [EditTableDetailsController::class, 'update']);
 Route::post("/delete/{tableName}", [DeleteController::class, 'delete']);
 Route::post("/add_data/{tableName}", [AddDataController::class, 'create']);

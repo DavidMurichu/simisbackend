@@ -28,7 +28,6 @@ class AddDataController extends Controller
     // Iterate over each data entry
     foreach ($dataEntries as $data) {
         try {
-            Log::info($data);
             $allowed = config('crud.create');
             if (!in_array($tableName, $allowed)) {
                 throw new Exception('Unauthorized request', 401);
@@ -74,7 +73,7 @@ class AddDataController extends Controller
             $auditData = [
                 'user_name' => $model,
                 'activity_type' => 'table update',
-                'ip_address' => request()->ip(),
+                'ipaddress' => request()->ip(),
             ];
             $this->makeAudit($auditData);
 

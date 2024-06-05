@@ -11,7 +11,8 @@ class SysYear extends Model
 
     protected $fillable = [
         'year',
-        'is_active'
+        'is_active',
+        'ipaddress'
     ];
 
     public function get_fillable(){

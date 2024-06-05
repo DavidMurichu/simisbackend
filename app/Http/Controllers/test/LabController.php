@@ -74,7 +74,7 @@ class LabController extends Controller
 
     public function getTableColumns(Request $request)
     {
-        $tableName='sch_students';
+        $tableName='sys_genders';
         // Check if the table exists
         if (!Schema::hasTable($tableName)) {
             throw new \Exception("Table '$tableName' does not exist.");
@@ -260,6 +260,45 @@ public function getForeignKeyDetails($tableName, $column)
 
     
 }
+
+
+
+public function get_table_data(Request $request, $tableName,  $id=null){
+    $tableName='users';
+    //check if operation is allowed
+    $allowed=config('crud.get');
+    if(!in_array($tableName,$allowed)){
+        $data=[
+            'message'=>'unauthorized request',
+            'status'=>401
+        ];
+        return response()->json($data, 401);
+    }
+
+    // Fetch data
+    if ($id) {
+        $data = DB::table($tableName)->find($id);
+
+        if (!$data) {
+            return response()->json(['error' => 'Record not found'], 404);
+        }
+    } else {
+        $data = DB::table($tableName)->get();
+    }
+
+    $dataId= $request->input('id');
+    if(empty($dataId)){
+    $columns =$this->get_model_fillable($tableName);
+    $data=$this->getDataByTableName($tableName, $columns);
+    }
+    
+  //  $data=$this->getDataByTableName(strtolower($tableName));
+//   $columns =$this->get_model_fillable($tableName);
+//   $data=$this->getDataByTableName($tableName, $columns);
+ 
+    return response()->json();
+   }
+
   
 }
 
