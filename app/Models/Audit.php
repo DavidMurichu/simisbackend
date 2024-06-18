@@ -15,8 +15,6 @@ class Audit extends Model
         'ipaddress',
         'user_agent',
         'additional_info',
-        'created_at',
-        'updated_at'
     ];
 
     public function user()

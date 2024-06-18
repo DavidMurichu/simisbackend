@@ -7,6 +7,7 @@ use App\Http\Controllers\auth\LogInController;
 use App\Http\Controllers\auth\LogOutController;
 
 use App\Http\Controllers\test\LabController;
+use App\Http\Controllers\test\LabHelperController;
 use App\Http\Controllers\user\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,5 +36,8 @@ Route::post("/deactivate", [UserController::class, 'deactivate'])->middleware('j
 
 Route::get("/token", [PasswordController::class, 'get_token']);
 Route::get("/home/lab", [LabController::class, 'get_table_data']);
+Route::get("/home/getValidations", [LabHelperController::class, 'getTableColumns']);
+
+
 
 // Route::get("/token", [PasswordController::class, 'get_token']);

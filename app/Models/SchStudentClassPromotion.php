@@ -9,17 +9,20 @@ class SchStudentClassPromotion extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'id',
         'studentid',
-        'class_name',
+        'current_class_id',
         'academicyear',
         'promotedon',
         'createdby',
         'lasteditedby',
         'ipaddress',
         'is_active',
-        'updated_at'
     ];
+
+    public function classTerm()
+    {
+        return $this->hasMany(SchStudentClassTerm::class, 'studentclasspromotionid');
+    }
     public function get_fillable(){
         return $this->fillable;
     }

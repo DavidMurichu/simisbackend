@@ -130,6 +130,9 @@ private function get_validation_rules($tableName, $columns)
             case strpos($columnType, 'tinyint') !== false:
                  $columnRules[] = 'boolean';
                 break;
+            case strpos($columnType, 'double') !== false:
+                $columnRules[] = 'numeric';
+                break;
      
             case strpos($columnType, 'timestamp') !== false:
             case strpos($columnType, 'datetime') !== false:
@@ -291,6 +294,7 @@ public function validateColumns($requestData, $tableName){
     foreach ($requestData as $key => $value) {
         // Check if the column exists in the table(error may occur if the frontend send wrong data)
         if (!in_array($key, $fillable)) {
+            Log::info( $key);
             return false;
         }
         array_push( $columns, $key);
@@ -393,6 +397,12 @@ public function getForeignKeyDetails($tableName, $column)
         Log::error("Error fetching foreign key details: " . $e->getMessage());
         return null;
     }
+}
+
+
+public function getCrossForeignData($tableName, $foreignTable, $foreignColumn, $foreignColumnDPointer)
+{
+
 }
 
 

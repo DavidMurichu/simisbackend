@@ -15,7 +15,8 @@ class EditTableDetailsController extends Controller
     public function update(Request $request , $tableName){
         
         //Check if operationis allowed
-        $allowed=['users', 'clients', 'auth_branches'];
+        $allowed = config('crud.create');
+        Log::info("data", $request->all());
         if(!in_array($tableName,$allowed)){
             $data=[
                 'message'=>'unauthorized edit',
@@ -29,12 +30,18 @@ class EditTableDetailsController extends Controller
         //check if the id is loaded
         if(!$id){
             $data=[
-                'message'=>'Unauthorized ',
+                'message'=>'Unauthorized boss',
                 'status'=>401,
             ];
             return response()->json($data, 401);
         }
+        Log::info("dta",  $data_to_update );
         //fetch the columns neeeded to update 
+        foreach ($data_to_update as $key => $value) {
+            if ($value === null) {
+                unset($data_to_update[$key]);
+            }
+        }
         $columns=$this->validateColumns($data_to_update, $tableName);
         if(!$columns){
         $data=[

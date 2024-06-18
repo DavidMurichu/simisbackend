@@ -5,13 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SchSubject extends Model
+class MemberPayableArear extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'name',
-        'subject_code',
-        'description',
+        'studentid',
+        'paymenttermid',
+        'studentclasspromotiontermid',
+        'documentno',
+        'invoicedon',
+        'amount',
+        'remarks',
         'createdby',
         'lasteditedby',
         'ipaddress',

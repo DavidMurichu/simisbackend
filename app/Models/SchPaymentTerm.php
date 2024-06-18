@@ -5,17 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SchSubject extends Model
+class SchPaymentTerm extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'name',
-        'subject_code',
-        'description',
+        'remarks',
         'createdby',
         'lasteditedby',
         'ipaddress',
-        'is_active',
+        'branch_name',
+        'income_name',
     ];
     public function get_fillable(){
         return $this->fillable;

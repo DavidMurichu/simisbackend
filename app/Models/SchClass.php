@@ -9,7 +9,6 @@ class SchClass extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'id',
         'name',
         'description',
         'createdby',

@@ -4,14 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
-class SchSubject extends Model
+class SchDemotedStudent extends Model
 {
     use HasFactory;
+
     protected $fillable = [
-        'name',
-        'subject_code',
-        'description',
+        'studentclasstermid',
+        'datedemoted',
+        'current_class_id',
+        'current_term_id',
+        'academicyear',
+        'demotedby',
         'createdby',
         'lasteditedby',
         'ipaddress',
@@ -20,4 +25,12 @@ class SchSubject extends Model
     public function get_fillable(){
         return $this->fillable;
     }
+
+    public function invoke(Request $request){
+        return $this->fillable;
+    }
+
+
+
+
 }

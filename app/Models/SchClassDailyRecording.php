@@ -10,7 +10,6 @@ class SchClassDailyRecording extends Model
     use HasFactory;
 
     protected $fillable = [
-        'id',
         'teacheronduty',
         'recording_date',
         'general_comment',
@@ -18,8 +17,6 @@ class SchClassDailyRecording extends Model
         'lasteditedby',
         'ipaddress',
         'is_active',
-        'created_at',
-        'updated_at',
         ];
 
         public function get_fillable(){

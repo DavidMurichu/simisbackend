@@ -10,7 +10,6 @@ class AuthBranch extends Model
     use HasFactory;
 
     protected $fillable = [
-        'id',
         'branch_name',
         'location',
         'remarks',
@@ -19,8 +18,7 @@ class AuthBranch extends Model
         'lasteditedon',
         'ipaddress',
         'is_active',
-        'updated_at',
-        'created_at'
+        
     ];
 
     public function get_fillable(){

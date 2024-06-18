@@ -2,7 +2,17 @@
 
 $noGet=[];
 $noCreate=['users'];
+
 $tables=[
+    'sch_payment_terms',
+    'sch_vote_heads',
+    'incomes',
+    'sch_services',
+    'sch_student_services',
+    'member_payable_arears',
+
+
+    'sch_fee_invoices',
     'sch_subjects',
     'sch_teachers',
     'sch_students',
@@ -23,7 +33,11 @@ $tables=[
     'sch_visitor_types',
     'sys_genders',
     'sch_visitor_registers',
-    'sch_class_daily_recordings'
+    'sch_class_daily_recordings',
+    'sch_demoted_students',
+
+    
+   
 
 ];
 

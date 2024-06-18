@@ -11,6 +11,14 @@ use Illuminate\Http\Request;
 class DeleteController extends Controller
 {
     public function delete(Request $request, $tableName){
+        $allowed=config('crud.get');
+        if(!in_array($tableName,$allowed)){
+            $data=[
+                'message'=>'unauthorized request',
+                'status'=>401
+            ];
+            return response()->json($data, 401);
+        }
         $id= $request->input("id");
         if (!Schema::hasTable($tableName)) {
             return response()->json(['message' => 'Table does not exist'], 404);

@@ -24,6 +24,8 @@ class AddDataController extends Controller
     // Handle both single entry and multiple entries
     $dataEntries = isset($request->all()[0]) ? $request->all() : [$request->all()];
     $results = [];
+
+    
     
     // Iterate over each data entry
     foreach ($dataEntries as $data) {

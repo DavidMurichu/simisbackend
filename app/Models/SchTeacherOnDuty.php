@@ -9,7 +9,6 @@ class SchTeacherOnDuty extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'id',
         'teacherid',
         'duty_start',
         'duty_end',
@@ -18,8 +17,6 @@ class SchTeacherOnDuty extends Model
         'lasteditedby',
         'ipaddress',
         'is_active',
-        'created_at',
-        'updated_at'
     ];
     public function get_fillable(){
         return $this->fillable;

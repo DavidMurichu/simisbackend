@@ -36,11 +36,14 @@ class GetTableDetailsController extends Controller
     
     //   $data=$this->getDataByTableName(strtolower($tableName));
     $columns =$this->get_model_fillable($tableName);
+    $columns=array_merge(['id','created_at',
+    'updated_at'],$columns);
+
     $data=$this->getDataByTableName($tableName, $columns);
       // Audit logging
     $auditData = [
         'user_name' => $tableName,
-        'activity_type' => 'table update',
+        'activity_type' => 'Get',
         'ipaddress' => request()->ip(),
     ];
     $this->makeAudit($auditData);

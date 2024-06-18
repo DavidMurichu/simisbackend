@@ -25,7 +25,6 @@ return new class extends Migration
             $table->foreign('studentclasspromotionid')->references('id')->on('sch_student_class_promotions');
             $table->foreign('term')->references('name')->on('sch_terms');
             $table->foreign('classterm')->references('name')->on('sch_academic_year_terms');
-           
         });
     }
 

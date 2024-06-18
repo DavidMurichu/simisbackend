@@ -10,15 +10,12 @@ class SysGender extends Model
     use HasFactory;
 
     protected $fillable = [
-        'id',
         'name',
         'remarks',
         'createdby',
         'lasteditedby',
         'ipaddress',
         'is_active',
-        'created_at',
-        'updated_at'
     ];
     public function get_fillable(){
         return $this->fillable;

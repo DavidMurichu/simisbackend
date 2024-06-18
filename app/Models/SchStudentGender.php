@@ -9,7 +9,6 @@ class SchStudentGender extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'id',
         'name',
         'description',
         'ipaddress',

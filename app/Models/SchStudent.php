@@ -9,7 +9,6 @@ class SchStudent extends Model
 {
     use HasFactory;
     protected $fillable = [
-    'id',
     "name",
     "admission_no",
     "nemis_number",

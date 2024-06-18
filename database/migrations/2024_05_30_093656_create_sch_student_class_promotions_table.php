@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('sch_student_class_promotions', function (Blueprint $table) {
             $table->id('id');
             $table->unsignedInteger('studentid')->comment('Student Name');
-            $table->string('class_name')->comment('Class Name');
+            $table->string('current_class_id')->comment('Class Name');
             $table->string('academicyear')->comment('Academic Year Name');
             $table->date('promotedon')->nullable()->comment('Date Promoted');
             $table->unsignedInteger('createdby')->nullable();
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('ipaddress', 32)->nullable();
             $table->enum('is_active', ['0', '1'])->default('1')->comment('Is Active');
             $table->unique(['studentid']);
-            $table->foreign('class_name')->references('name')->on('sch_classes');
+            $table->foreign('current_class_id')->references('name')->on('sch_classes');
             $table->foreign('academicyear')->references('name')->on('sch_academic_years');
             $table->timestamps();
         });

@@ -5,20 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SchVisitorRegister extends Model
+class SchFeeStructureVoteHead extends Model
 {
     use HasFactory;
-
-    protected $fillable = [
-        
-            'visitortype',
-            'name',
-            'mobile',
-            'gendername',
-            'date_visited',
+  
+        protected $fillable = [
             'classid',
-            'visiting_reason',
-            'sms',
+            'termid',
+            'voteheadid',
+            'amount',
+            'status',
+            'remarks',
             'createdby',
             'lasteditedby',
             'ipaddress',
@@ -26,6 +23,11 @@ class SchVisitorRegister extends Model
         ];
         public function get_fillable(){
             return $this->fillable;
-        }
+          }
+      
 
+        public function actions(){
+            
+        }
+    
 }

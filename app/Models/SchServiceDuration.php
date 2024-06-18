@@ -16,8 +16,6 @@ class SchServiceDuration extends Model
         'lasteditedby',
         'ipaddress',
         'is_active',
-        'created_at',
-        'updated_at'
     ];
 
     public function get_fillable(){
