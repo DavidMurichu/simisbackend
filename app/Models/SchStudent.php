@@ -48,6 +48,22 @@ class SchStudent extends Model
     "branch_id"
     ];
 
+    public function currentAcademicYear()
+{
+    return $this->belongsTo(SchAcademicYear::class, 'academicyearid', 'name');
+}
+
+public function currentClass()
+{
+    return $this->belongsTo(SchClass::class, 'current_class_id', 'name');
+}
+public function currentTerm()
+{
+    return $this->belongsTo(SchTerm::class, 'current_term_id', 'name');
+}
+
+    
+
     
     public function get_fillable(){
         return $this->fillable;

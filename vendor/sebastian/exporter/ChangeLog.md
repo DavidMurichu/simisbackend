@@ -2,6 +2,34 @@
 
 All notable changes are documented in this file using the [Keep a CHANGELOG](https://keepachangelog.com/) principles.
 
+## [6.1.1] - 2024-06-18
+
+### Fixed
+
+* [#61](https://github.com/sebastianbergmann/exporter/issues/61): `count(): Recursion detected` warning triggered
+
+## [6.1.0] - 2024-06-18
+
+### Added
+
+* [#59](https://github.com/sebastianbergmann/exporter/pull/59): Option to limit export of (large) arrays (to speed up PHPUnit)
+
+### Changed
+
+* [#60](https://github.com/sebastianbergmann/exporter/pull/60): Take shortcut when exporting a string
+
+## [6.0.3] - 2024-06-17
+
+### Fixed
+
+* Fixed code coverage metadata
+
+## [6.0.2] - 2024-06-17 [YANKED]
+
+### Changed
+
+* [#58](https://github.com/sebastianbergmann/exporter/pull/58): Remove unnecessary `sprintf()` in hot path
+
 ## [6.0.1] - 2024-03-02
 
 ### Changed
@@ -13,6 +41,12 @@ All notable changes are documented in this file using the [Keep a CHANGELOG](htt
 ### Removed
 
 * This component is no longer supported on PHP 8.1
+
+## [5.1.2] - 2024-03-02
+
+### Changed
+
+* Do not use implicitly nullable parameters
 
 ## [5.1.1] - 2023-09-24
 
@@ -106,8 +140,13 @@ All notable changes are documented in this file using the [Keep a CHANGELOG](htt
 
 * Remove HHVM-specific code that is no longer needed
 
+[6.1.1]: https://github.com/sebastianbergmann/exporter/compare/6.1.0...6.1.1
+[6.1.0]: https://github.com/sebastianbergmann/exporter/compare/6.0.3...6.1.0
+[6.0.3]: https://github.com/sebastianbergmann/exporter/compare/fe0dca49a60d34440e2f086951952dd13aa9a5d2...6.0.3
+[6.0.2]: https://github.com/sebastianbergmann/exporter/compare/6.0.1...fe0dca49a60d34440e2f086951952dd13aa9a5d2
 [6.0.1]: https://github.com/sebastianbergmann/exporter/compare/6.0.0...6.0.1
 [6.0.0]: https://github.com/sebastianbergmann/exporter/compare/5.1...6.0.0
+[5.1.2]: https://github.com/sebastianbergmann/exporter/compare/5.1.1...5.1.2
 [5.1.1]: https://github.com/sebastianbergmann/exporter/compare/5.1.0...5.1.1
 [5.1.0]: https://github.com/sebastianbergmann/exporter/compare/5.0.1...5.1.0
 [5.0.1]: https://github.com/sebastianbergmann/exporter/compare/5.0.0...5.0.1

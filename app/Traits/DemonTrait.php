@@ -29,10 +29,16 @@ trait DemonTrait
          return $response;
     }
     public function demonAdd($request, $tableName){
+        if (is_array($request)) {
+            // Create a new Request object from the array data
+            $request = new Request($request);
+        } elseif (!($request instanceof Request)) {
+            throw new \InvalidArgumentException('request must be an array or an instance of Request.');
+        }
         // Instantiate EditTableDetailsController
         $addController = new AddDataController();
         // Call the update method
-        $response = $addController->create(new Request($request->all()), $tableName);
+        $response = $addController->create( $request, $tableName);
         return $response;
    }
 

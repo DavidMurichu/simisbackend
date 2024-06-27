@@ -10,6 +10,9 @@ $tables=[
     'sch_services',
     'sch_student_services',
     'member_payable_arears',
+    'sch_student_service_invoices',
+    'sch_vote_head_invoice_details',
+    'sch_fee_structure_vote_heads',
 
 
     'sch_fee_invoices',

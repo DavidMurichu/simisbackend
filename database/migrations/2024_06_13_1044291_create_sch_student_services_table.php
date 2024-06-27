@@ -26,7 +26,7 @@ return new class extends Migration
             $table->foreign('studentid')->references('id')->on('sch_students');
 
             // Unique constraint
-            $table->unique(['studentid', 'studentclasspromotiontermid'],'sstu_svc_promoterm_unique');
+            $table->unique(['studentid', 'studentclasspromotiontermid', 'serviceid'],'sstu_svc_promoterm_unique');
 
             $table->timestamps();
         });

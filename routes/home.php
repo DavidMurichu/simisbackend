@@ -6,6 +6,7 @@ use App\Http\Controllers\giant\DeleteController;
 use App\Http\Controllers\giant\EditTableDetailsController;
 use App\Http\Controllers\giant\GetTableDetailsController;
 use App\Http\Controllers\giant\MassAddController;
+use App\Http\Controllers\unique\InvoicesController;
 use App\Http\Controllers\unique\PromotedStudentsController;
 use App\Http\Controllers\unique\StudentReportingController;
 
@@ -25,6 +26,7 @@ Route::get("/promoted/students/{tableName?}", [PromotedStudentsController::class
 Route::post("/student_transition/{tableName}", [PromotedStudentsController::class, 'promoteOrDemoteStudent']);
 Route::post("/report", [StudentReportingController::class, 'studentClassTermReporting']);
 Route::post("/voteheads", [StudentReportingController::class, 'studentClassTermReporting']);
+Route::post("/create_invoice", [InvoicesController::class, 'processInvoice']);
 
 }
 );

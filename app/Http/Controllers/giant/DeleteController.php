@@ -20,6 +20,13 @@ class DeleteController extends Controller
             return response()->json($data, 401);
         }
         $id= $request->input("id");
+        if(!$id){
+            $data=[
+                "message"=>"error deleting data",
+                "status"=>400
+            ];
+            return response()->json($data, 400);
+        }
         if (!Schema::hasTable($tableName)) {
             return response()->json(['message' => 'Table does not exist'], 404);
         }
