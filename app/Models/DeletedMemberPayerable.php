@@ -5,21 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SchStudentServiceInvoice extends Model
+class DeletedMemberPayerable extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'studentid',
+        'paymenttermid',
+        'studentclasspromotiontermid',
+        'documentno',
+        'invoicedon',
         'amount',
-        'balance',
+        'remarks',
         'createdby',
         'lasteditedby',
         'ipaddress',
         'is_active',
-        'invoiceid',
-        'studentserviceid',
     ];
     public function get_fillable(){
         return $this->fillable;
-      }
-    
+    }
 }

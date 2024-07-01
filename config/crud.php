@@ -39,7 +39,8 @@ $tables=[
     'sch_class_daily_recordings',
     'sch_demoted_students',
 
-    
+    //special
+    'schema_alerts'
    
 
 ];

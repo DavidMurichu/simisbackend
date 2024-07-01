@@ -61,6 +61,27 @@ class AddDataController extends Controller
             $model = Str::singular(Str::studly($tableName));
             $modelPath = "App\\Models\\" . $model;
 
+            if (class_exists("App\\Models\\" . $model . 'Log')) {
+                // Log model exists, set $logModel variable
+                $logModel = "App\\Models\\" . $model . 'Log';
+            } else {
+                // Log model doesn't exist, handle alerting or logging the data
+                $data = $request->all();
+                $data['ipaddress'] = request()->ip();
+            
+                $D_Alert = [
+                    'table_name' => $model,
+                    'data' => $data,
+                ];
+            
+                $this->schemaAlert($D_Alert);
+            
+                // You might want to handle the absence of $logModel here, depending on your logic flow
+                $logModel = null; // or any default value you need
+            }
+            
+
+
             // Check if the class exists
             if (!class_exists($modelPath)) {
                 throw new Exception("Model class '$modelPath' does not exist.");
@@ -70,6 +91,19 @@ class AddDataController extends Controller
             $modelInstance = new $modelPath();
             $data['ipaddress'] = request()->ip();
             $modelInstance::create($data);
+
+            //make log
+            if($logModel){
+                $data['action']='Create';
+                $logModel= new $logModel;
+                $logModel::create($data);
+                $auditData = [
+                    'user_name' => 'Log_Demon',
+                    'activity_type' => 'Log: '.$model,
+                    'ipaddress' => request()->ip(),
+                ];
+                $this->makeAudit($auditData);
+            }
 
             // Audit logging
             $auditData = [

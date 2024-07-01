@@ -27,6 +27,8 @@ Route::post("/student_transition/{tableName}", [PromotedStudentsController::clas
 Route::post("/report", [StudentReportingController::class, 'studentClassTermReporting']);
 Route::post("/voteheads", [StudentReportingController::class, 'studentClassTermReporting']);
 Route::post("/create_invoice", [InvoicesController::class, 'processInvoice']);
+Route::post("/create_arear", [InvoicesController::class, 'create_arear']);
+Route::post("/delete_arear", [InvoicesController::class, 'delete_arear']);
 
 }
 );

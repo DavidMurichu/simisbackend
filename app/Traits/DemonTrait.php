@@ -3,24 +3,45 @@
 namespace App\Traits;
 
 use App\Http\Controllers\giant\AddDataController;
+use App\Http\Controllers\giant\DeleteController;
 use App\Http\Controllers\giant\EditTableDetailsController;
 use App\Models\Audit;
+use App\Models\SchemaAlert;
 use Illuminate\Http\Request;
 
 use Log;
 
 trait DemonTrait
 {
+
+    public function schemaAlert($D_Alert){
+        try{
+            SchemaAlert::create($D_Alert);
+        }catch(\Exception $e){
+        Log::error(json_encode($D_Alert) . 'Schema Alert ' . $e->getMessage());
+        }
+    }
     public function makeAudit( $auditData) {
         try{
         $audit=Audit::create($auditData);
         // Log::info('Audit Created status: '.$audit);
         return $auditData;
     }catch(\Exception $e){
-        Log::error(json_encode($auditData) . ' ' . $e->getMessage());
+        Log::error(json_encode($auditData) . 'Audit ' . $e->getMessage());
     }
     }
 
+
+    public function demonDelete($tableName, $id){
+        $deleteController=new DeleteController;
+        $data=[
+            'id'=>$id
+        ];
+
+        $response=$deleteController->delete(new Request($data), $tableName);
+        return $response;
+
+    }
     public function demonEdit($tableName, $data){
          // Instantiate EditTableDetailsController
          $editController = new EditTableDetailsController();
