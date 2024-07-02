@@ -21,6 +21,17 @@ class SchFeeStructureVoteHead extends Model
             'ipaddress',
             'is_active',
         ];
+
+        public function voteHead(){
+            return $this->belongsTo(SchVoteHead::class, 'voteheadid', 'name');
+        }
+
+        public function getForeign(){
+            $voteheadId=$this->voteHead->id;
+            return ['voteheads'=>[
+                'id'=>$voteheadId
+            ]];
+        }
         public function get_fillable(){
             return $this->fillable;
           }

@@ -13,7 +13,7 @@ class GetTableDetailsController extends Controller
     use DemonTrait;
 
     // GET data from table by table name
-   public function get_table_data(Request $request, $tableName, $id=null){
+   public function get_table_data(Request $request, $tableName, $getForeign=false, $id=null){
       //check if operation is allowed
       $allowed=config('crud.get');
       if(!in_array($tableName,$allowed)){
@@ -39,7 +39,8 @@ class GetTableDetailsController extends Controller
     $columns=array_merge(['id','created_at',
     'updated_at'],$columns);
 
-    $data=$this->getDataByTableName($tableName, $columns);
+    $data=$this->getDataByTableName($tableName, $columns, $getForeign);
+    
       // Audit logging
     $auditData = [
         'user_name' => $tableName,

@@ -131,9 +131,9 @@ class InvoicesController extends Controller
  
          // Validate invoice data against student's current details
          if (
-             $student->currentClass->id != $invoiceData['classid'] ||
-             $student->currentTerm->id != $invoiceData['termid'] ||
-             $student->currentAcademicYear->id != $invoiceData['academicyearid']
+             $student->currentClass->name != $invoiceData['classid'] ||
+             $student->currentTerm->name != $invoiceData['termid'] ||
+             $student->currentAcademicYear->name != $invoiceData['academicyearid']
          ) {
              throw new \Exception("Error creating invoice. Check your data. ");
          }
@@ -196,6 +196,7 @@ class InvoicesController extends Controller
     public function create_arear(Request $request){
 
         try{
+            Log::info($request->all());
             $studentArears = $request->input('studentarears');
             $services=$request->input('studentservices');
             $commonData=$request->input('commondata');
@@ -218,11 +219,12 @@ class InvoicesController extends Controller
                 $invoiceId=$this->generateInvoice();
                 $studentArear['documentno']=$invoiceId;
                 $studentArear['invoicedon']=strval(Carbon::now());
+                $studentArear['paymenttermid']=1;
                 //process services
-                $this->processServices($services, $commonData, $invoiceId, $studentId);
                 $response=$this->demonAdd(new Request($studentArear), 'member_payable_arears');
-                return response()->json($response, $response->status());
+                
             } 
+            return response()->json($response, $response->status());
         }catch(\Exception $e){
             \Log::error($e->getMessage());
 
@@ -267,6 +269,6 @@ class InvoicesController extends Controller
             ];
             return response()->json($data, 401);
         }
-
     }
+    
 }

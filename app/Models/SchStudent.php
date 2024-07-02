@@ -62,8 +62,7 @@ public function currentTerm()
     return $this->belongsTo(SchTerm::class, 'current_term_id', 'name');
 }
 
-    
-
+    public $relations=['currentAcademicYear', 'currentClass', 'currentTerm'];
     
     public function get_fillable(){
         return $this->fillable;

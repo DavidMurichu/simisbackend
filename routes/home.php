@@ -16,7 +16,7 @@ Route::group([
 ],function () {
 //
 
-Route::get("/get_data/{tableName}/{id?}", [GetTableDetailsController::class, 'get_table_data']);
+Route::get("/get_data/{tableName}/{getForeign?}/{id?}", [GetTableDetailsController::class, 'get_table_data']);
 Route::post("/edit/{tableName}", [EditTableDetailsController::class, 'update']);
 Route::post("/delete/{tableName}", [DeleteController::class, 'delete']);
 Route::post("/add_data/{tableName}", [AddDataController::class, 'create']);
@@ -26,6 +26,7 @@ Route::get("/promoted/students/{tableName?}", [PromotedStudentsController::class
 Route::post("/student_transition/{tableName}", [PromotedStudentsController::class, 'promoteOrDemoteStudent']);
 Route::post("/report", [StudentReportingController::class, 'studentClassTermReporting']);
 Route::post("/voteheads", [StudentReportingController::class, 'studentClassTermReporting']);
+// invoices
 Route::post("/create_invoice", [InvoicesController::class, 'processInvoice']);
 Route::post("/create_arear", [InvoicesController::class, 'create_arear']);
 Route::post("/delete_arear", [InvoicesController::class, 'delete_arear']);

@@ -63,6 +63,36 @@ trait DemonTrait
         return $response;
    }
 
+
+
+    public function fetchWithRelations($model, array $relationsWithColumns, array $columns)
+    {
+        $relations = array_keys($relationsWithColumns);
+
+        $query = $model::with($relations);
+
+        return $query->get()->map(function ($item) use ($columns, $relationsWithColumns) {
+            $result = [];
+
+            // Include non-foreign fields
+            foreach ($columns as $field) {
+                $result[$field] = $item->$field;
+            }
+
+            // Include related columns
+            foreach ($relationsWithColumns as $relation => $relColumns) {
+                $relationInstance = $item->$relation;
+                if ($relationInstance) {
+                    foreach ($relColumns as $relColumn) {
+                        $result[$relation . '_' . $relColumn] = $relationInstance->$relColumn ?? 'N/A';
+                    }
+                }
+            }
+
+            return $result;
+        });
+    }
+
   public function isAllowed($tableName, string $operation){
     $allowed=config('crud.'.$operation);
     if(!in_array($tableName,$allowed)){

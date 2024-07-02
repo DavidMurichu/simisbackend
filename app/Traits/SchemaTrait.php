@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Log;
 use Str;
 use PDO;
@@ -239,7 +240,7 @@ private function isColumnNullable($tableName, $column)
 }
 
 //get data
-     public function getDataByTableName($tableName, $columns=['*'])
+     public function getDataByTableName($tableName, $columns=['*'], $getForeign=false)
         {
          try{
 
@@ -247,12 +248,14 @@ private function isColumnNullable($tableName, $column)
                 return response()->json(['error' => 'Table does not exist'], 404);
             }
             // Get the fillable attributes from the model
+
+            
             $query = DB::table($tableName);
             if (!empty($columns)) {
                 $query->select($columns);
             }
+            $relationship=$this->getRelationships($tableName);
             $data = $query->get();
-            // Return the data
             return $data;
         } catch (\Exception $e) {
             Log::error($e->getMessage());
@@ -260,6 +263,34 @@ private function isColumnNullable($tableName, $column)
         }
 
         }
+
+        private function getRelationships($tableName)
+    {
+        // Convert table name to model name
+        $model = Str::singular(Str::studly($tableName));
+        $modelPath = "App\\Models\\" . $model;
+        // Check if the class exists
+        if (!class_exists($modelPath)) {
+            throw new Exception("Model class '$modelPath' does not exist.");
+        }
+        // Instantiate the model class and create the record
+        $modelClass = new $modelPath();
+        $relationships = [];
+
+        // Use reflection to inspect model relationships
+        $reflectionClass = new \ReflectionClass($modelClass);
+        $methods = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);
+
+        foreach ($methods as $method) {
+            // Check if the method returns a Relation instance
+            $returnType = $method->getReturnType();
+            if ($returnType && is_subclass_of($returnType->getName(), Relation::class)) {
+                $relationships[] = $method->getName();
+            }
+        }
+
+        return $relationships;
+    }
 
 
         //delete Data
