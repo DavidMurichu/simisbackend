@@ -5,7 +5,12 @@ namespace App\Http\Controllers\unique;
 use App\Http\Controllers\Controller;
 use App\Models\MemberPayableArear;
 use App\Models\SchFeeInvoice;
+use App\Models\SchFeeReversedInvoice;
+use App\Models\SchFeeStructureVoteHead;
 use App\Models\SchStudent;
+use App\Models\SchStudentClassPromotion;
+use App\Models\SchStudentClassTerm;
+use App\Models\SchStudentService;
 use App\Models\test\InvoiceHolder;
 use App\Traits\DemonTrait;
 use Exception;
@@ -23,51 +28,58 @@ class InvoicesController extends Controller
             // Separate common data from the request
             $commonData = $request->input('commondata');
             $studentInvoices = $request->input('studentinvoices');
-            if(!$studentInvoices){
-                $data=[
-                    "message"=>"No selected student"
-                ];
-                return response()->json($data, 401);
+    
+            // Check if there are selected student invoices
+            if (empty($studentInvoices)) {
+                return response()->json(['message' => "No selected students."], 400);
             }
+    
+            // Begin a database transaction
+            \DB::beginTransaction();
+    
             foreach ($studentInvoices as $studentInvoiceData) {
                 $studentId = $studentInvoiceData['studentid'];
                 $invoiceData = $studentInvoiceData['invoiceData'];
                 $voteHeadData = $studentInvoiceData['voteheads'];
                 $serviceData = $studentInvoiceData['services'];
-                
-
-               
+    
                 // Create an Invoice for each student
                 $invoiceResult = $this->createInvoice($invoiceData, $commonData, $studentId);
-
+              
                 if (!$invoiceResult['success']) {
-                    return response()->json(['message' => "error creating  invoices"], 500);
+                    throw new \Exception("Error creating invoice for student ID: $studentId");
                 }
-
+    
                 $invoiceId = $invoiceResult['invoice_id'];
-
+                
                 // Process Vote Heads
+                if(!empty($voteHeadData)){
                 $this->processVoteHeads($voteHeadData, $commonData, $invoiceId);
-
+                }
+                
                 // Process Services
+                if(!empty($serviceData)){
                 $this->processServices($serviceData, $commonData, $invoiceId, $studentId);
+                }
             }
-
+    
+            // Commit the transaction
+            \DB::commit();
+    
             // Return Success Response
             return response()->json(['message' => 'Invoices processed successfully.'], 200);
-
+    
         } catch (\Exception $e) {
+            // Rollback the transaction on error
+            \DB::rollBack();
+    
             // Log the error
             Log::error('Invoice processing error: ' . $e->getMessage());
-
+    
             // Return error response
-            $data = [
-                "message" =>  $e->getMessage()
-            ];
-            return response()->json($data, 500);
+            return response()->json(['error' => 'Failed to process invoices. Please try again.'], 500);
         }
     }
-
     public function createInvoice($invoiceData,$commonData, $studentId)
     {
         // Retrieve the student with related data eagerly loaded
@@ -76,23 +88,59 @@ class InvoicesController extends Controller
         // Check if student exists
         if (!$student) {
             throw new \Exception("Student with ID $studentId not found.");
-        }
+        } 
+        try{
+            $promotionId = SchStudentClassPromotion::where('studentid', $studentId)->first();
 
+            if ($promotionId) {
+                // If promotion ID is found, fetch class terms associated with it
+                $classterm = SchStudentClassTerm::with('studentclasspromotion')
+                    ->where('studentclasspromotionid', $promotionId->id)
+                    ->first();
+            } else {
+                // Handle case where no promotion ID is found for the student ID
+                Log::info("No promotion found for student ID: $studentId");
+                throw new \Exception("Student have not reported." );
+
+            }
+        }catch(Exception $e){
+            throw new \Exception("Student not promoted.".$e );
+        }
         // Validate invoice data against student's current details
-        if (
-            $student->currentClass->id != $invoiceData['classid'] ||
-            $student->currentTerm->id != $invoiceData['termid'] ||
-            $student->currentAcademicYear->id != $invoiceData['academicyearid']
-        ) {
-            throw new \Exception("Error creating invoice. Check your data. ");
-        }
 
+    
+
+
+
+        if (
+            $promotionId->current_class_id != $invoiceData['classid']
+        ) {
+            throw new \Exception("invalid Class. ");
+           
+        }
+        
+        if (
+            $classterm->term != $invoiceData['termid']
+        ) {
+            throw new \Exception("invalid term. ");
+
+        }
+        
+        if (
+            $promotionId->academicyear != $invoiceData['academicyearid']
+        ) {
+            throw new \Exception("invalid academic year. ");
+        }
         // Generate Invoice Number
         $invoiceNumber = $this->generateInvoice();
-
         // Merge invoice number into invoice data
+        
+        $invoiceData['studentclasstermsid'] =$classterm->id;
+        $invoiceData['classid'] =$student->currentClass->id;
         $invoiceData['invoiceno'] = $invoiceNumber;
         $invoiceData['studentid']=$studentId;
+        $invoiceData['termid']=$student->currentTerm->id;
+        $invoiceData['academicyearid']=$student->currentAcademicYear->is;
         $invoiceData['invoicedate']=strval(Carbon::now());
         $invoiceData['createdby']=$commonData['createdby'];
 
@@ -142,16 +190,16 @@ class InvoicesController extends Controller
     private function processVoteHeads($voteHeadData, $commonData, $invoiceId)
     {
         foreach ($voteHeadData as $voteHeadEntry) {
-            $voteHeadEntry = [
+            $voteHeadEntryData = [
                 "invoiceid" => $invoiceId,
                 "feestructurevoteheadsid" => $voteHeadEntry['voteheadid'],
                 "amount" => $voteHeadEntry['amount'],
                 "createdby" => $commonData["createdby"],
                 "is_active"=>"1"
             ];
-
+            Log::info('turn', $voteHeadEntryData);
             // Insert Vote Head Data
-            $response=$this->demonAdd(new Request($voteHeadEntry), 'sch_vote_head_invoice_details');
+            $response=$this->demonAdd(new Request($voteHeadEntryData), 'sch_vote_head_invoice_details');
             if($response->status()!=201){
             throw new \Exception($response);
                 
@@ -162,23 +210,40 @@ class InvoicesController extends Controller
     private function processServices($serviceData, $commonData, $invoiceId, $studentId)
     {
         foreach ($serviceData as $serviceEntry) {
-            $serviceEntry = [
-                "invoiceid" => $invoiceId,
-                "studentid" => $studentId,
-                "studentserviceid" => $serviceEntry["serviceid"],
-                "amount" => $serviceEntry["amount"],
-                "balance" => $serviceEntry['balance'], 
-                "createdby" => $commonData["createdby"],
-                "is_active"=>"1"
-            ];
-
-            // Insert Service Data
-            $response=$this->demonAdd(new Request($serviceEntry), 'sch_student_service_invoices');
-            if($response->status()!=201){
-            throw new \Exception($response);
-                
+            try {
+                // Check if the service exists for the student
+                $service = SchStudentService::where('studentid', $serviceEntry["serviceid"])->first();
+        
+                if (!$service) {
+                    Log::error("Service not found for student with ID: {$serviceEntry['serviceid']}");
+                    continue;
+                }
+        
+                // Prepare service data for insertion
+                $serviceData = [
+                    "invoiceid" => $invoiceId,
+                    "studentid" => $studentId,
+                    "studentserviceid" => $service->id, // Assuming service id is needed
+                    "amount" => $serviceEntry["amount"],
+                    "balance" => $serviceEntry["balance"],
+                    "createdby" => $commonData["createdby"],
+                    "is_active" => "1"
+                ];
+        
+                // Insert Service Data
+                $response = $this->demonAdd(new Request($serviceData), 'sch_student_service_invoices');
+        
+                // Check if insertion was successful
+                if ($response->status() != 201) {
+                    throw new \Exception("Failed to insert service invoice data.");
+                }
+        
+            } catch (\Exception $e) {
+                Log::error("Error processing service invoice: " . $e->getMessage());
+                continue; // Skip to the next iteration on error
             }
         }
+        
     }
 
     private function generateInvoice()
@@ -191,6 +256,7 @@ class InvoicesController extends Controller
         return strval($invoiceNumber);
 
     }
+
 
 
     public function create_arear(Request $request){
@@ -216,10 +282,10 @@ class InvoicesController extends Controller
                 }
                 // get class details
                 $this->validateStudent($studentId, $studentArear);
-                $invoiceId=$this->generateInvoice();
-                $studentArear['documentno']=$invoiceId;
+                // send message 
+                $documentNo=$this->generateInvoice();
+                $studentArear['documentno']=$documentNo;
                 $studentArear['invoicedon']=strval(Carbon::now());
-                $studentArear['paymenttermid']=1;
                 //process services
                 $response=$this->demonAdd(new Request($studentArear), 'member_payable_arears');
                 
@@ -270,5 +336,138 @@ class InvoicesController extends Controller
             return response()->json($data, 401);
         }
     }
+
+    public function recordPaymentTerm($paymentData){
+        try{
+        $data=$this->demonAdd(new Request($paymentData), 'sch_payment_terms');
+        $data=(array)$data;
+        Log::info('payment', $data);
+        return $data['original'][0]['dataid'];
+        }catch(Exception $e){
+            Log::info("error". $e);
+            throw new Exception("error creating payment term");
+        }
+        
+    }
+
+    public function reverseInvoice(Request $request)
+{
+    try {
+        // Validate input
+        $request->validate([
+            'id' => 'required|exists:sch_fee_invoices,id',
+        ]);
+
+        $id = $request->input('id');
+
+        // Fetch the invoice data to be reversed
+        $invoiceData = SchFeeInvoice::find($id);
+
+        if (!$invoiceData) {
+            return response()->json(['error' => 'Invoice not found'], 404);
+        }
+
+        // Begin a database transaction
+        \DB::beginTransaction();
+
+        // Create a reversed invoice record
+        $reversedInvoice = new SchFeeReversedInvoice();
+        $reversedInvoice->fill($invoiceData->toArray());
+        $reversedInvoice->save();
+
+        // Delete the original invoice
+        $invoiceData->delete();
+
+        // Commit the transaction
+        \DB::commit();
+
+        // Return success response
+        return response()->json(['message' => 'Invoice reversed successfully'], 200);
+    } catch (\Exception $e) {
+        // Rollback the transaction on error
+        \DB::rollBack();
+
+        // Log the error for debugging
+        \Log::error('Error reversing invoice: ' . $e->getMessage());
+
+        // Return error response
+        return response()->json(['error' => 'Failed to reverse invoice. Please try again.'], 500);
+    }
+}
+
+public function getInvoicingData(Request $request)
+{
+    try {
+        // Validate the input parameters
+        $request->validate([
+            'classid' => 'required|string',
+            'termid' => 'required|string',
+            'academicyearid' => 'required|string',
+        ]);
+
+        $classId = $request->input('classid');
+        $termId = $request->input('termid');
+        $academicYearId = $request->input('academicyearid');
+
+        // Fetch vote heads data
+        $voteHeads = SchFeeStructureVoteHead::where('classid', $classId)
+            ->where('termid', $termId)
+            ->get();
+
+        // Fetch students who are not yet invoiced and match the given class, term, and academic year
+        $invoiced = SchFeeInvoice::pluck('studentid')->toArray();
+        $promoted = SchStudentClassPromotion::pluck('studentid')->toArray();
+        $notInvoicedPromoted = !empty($invoiced) ? array_diff($promoted, $invoiced) : $promoted;
+
+        $students = SchStudent::with([
+            'currentAcademicYear:id,name',
+            'currentClass:id,name',
+            'currentTerm:id,name',
+            'services.service:id,name,cost'
+        ])
+            ->where('current_class_id', $classId)
+            ->where('current_term_id', $termId)
+            ->where('academicyearid', $academicYearId)
+            ->whereIn('id', $notInvoicedPromoted)
+            ->get();
+
+        // Map student data to the desired format
+        $studentsData = $students->map(function ($student) {
+            return [
+                'id' => $student->id,
+                'academicyearid' => $student->currentAcademicYear->name ?? null,
+                'prev_class_id' => $student->previousClass->name ?? null,
+                'current_class_id' => $student->currentClass->name ?? null,
+                'current_term_id' => $student->currentTerm->name ?? null,
+                'transfer_term_id' => $student->transferTerm->name ?? null,
+                'name' => $student->name,
+                'admission_no' => $student->admission_no,
+                'services' => $student->services->map(function ($service) {
+                    return [
+                        'serviceid' => $service->serviceid,
+                        'name' => $service->service->name,
+                        'amount' => $service->service->cost
+                    ];
+                })->toArray()
+            ];
+        })->toArray();
+
+        // Return combined data as JSON response
+        return response()->json([
+            'success' => true,
+            'vote_heads' => $voteHeads,
+            'students' => $studentsData
+        ]);
+
+    } catch (\Exception $e) {
+        // Handle any exceptions
+        \Log::error('Error fetching invoicing data: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' =>  $e->getMessage()
+        ], 500);
+    }
+}
+
     
 }

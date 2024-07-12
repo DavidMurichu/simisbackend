@@ -19,7 +19,7 @@ class AddDataController extends Controller
     use SchemaTrait;
     use DemonTrait;
 
-    public function create(Request $request, $tableName)
+    public function create(Request $request, $tableName, $isArray=false)
 {
     // Handle both single entry and multiple entries
     $dataEntries = isset($request->all()[0]) ? $request->all() : [$request->all()];
@@ -66,12 +66,12 @@ class AddDataController extends Controller
                 $logModel = "App\\Models\\" . $model . 'Log';
             } else {
                 // Log model doesn't exist, handle alerting or logging the data
-                $data = $request->all();
-                $data['ipaddress'] = request()->ip();
+                $entry = $request->all();
+                $entry['ipaddress'] = request()->ip();
             
                 $D_Alert = [
                     'table_name' => $model,
-                    'data' => $data,
+                    'data' => $entry,
                 ];
             
                 $this->schemaAlert($D_Alert);
@@ -90,20 +90,21 @@ class AddDataController extends Controller
             // Instantiate the model class and create the record
             $modelInstance = new $modelPath();
             $data['ipaddress'] = request()->ip();
-            $modelInstance::create($data);
+            $dataRecord=$modelInstance::create($data);
 
             //make log
-            if($logModel){
-                $data['action']='Create';
-                $logModel= new $logModel;
-                $logModel::create($data);
-                $auditData = [
-                    'user_name' => 'Log_Demon',
-                    'activity_type' => 'Log: '.$model,
-                    'ipaddress' => request()->ip(),
-                ];
-                $this->makeAudit($auditData);
-            }
+            // if($logModel){
+            //     $data['action']='Create';
+            //     $logModel= new $logModel;
+
+            //     $logModel::create($data);
+            //     $auditData = [
+            //         'user_name' => 'Log_Demon',
+            //         'activity_type' => 'Log: '.$model,
+            //         'ipaddress' => request()->ip(),
+            //     ];
+            //     $this->makeAudit($auditData);
+            // }
 
             // Audit logging
             $auditData = [
@@ -115,6 +116,7 @@ class AddDataController extends Controller
 
             // Record successful creation
             $results[] = [
+                'dataid'=>$dataRecord->id,
                 'status' => 'success',
                 'message' => 'Data created successfully'
             ];
@@ -138,7 +140,13 @@ class AddDataController extends Controller
     $overallStatus = collect($results)->contains('status', 'error') ? 401 : 201;
 
     // Return all results
-    return response()->json($results, $overallStatus);
+    if(!$isArray){
+        return response()->json($results, $overallStatus);
+    }
+    return [
+        'results'=>$results,
+        'status'=>$overallStatus
+    ];
 }
 
     /**

@@ -35,7 +35,7 @@ Route::post("/deactivate", [UserController::class, 'deactivate'])->middleware('j
 
 
 Route::get("/token", [PasswordController::class, 'get_token']);
-Route::get("/home/lab", [LabController::class, 'get_table_data']);
+Route::get("/home/lab", [LabController::class, 'index']);
 Route::get("/home/getValidations", [LabHelperController::class, 'getTableColumns']);
 
 

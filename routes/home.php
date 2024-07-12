@@ -8,6 +8,8 @@ use App\Http\Controllers\giant\GetTableDetailsController;
 use App\Http\Controllers\giant\MassAddController;
 use App\Http\Controllers\unique\InvoicesController;
 use App\Http\Controllers\unique\PromotedStudentsController;
+use App\Http\Controllers\unique\ServicesController;
+use App\Http\Controllers\unique\StudentController;
 use App\Http\Controllers\unique\StudentReportingController;
 
 Route::group([
@@ -29,7 +31,11 @@ Route::post("/voteheads", [StudentReportingController::class, 'studentClassTermR
 // invoices
 Route::post("/create_invoice", [InvoicesController::class, 'processInvoice']);
 Route::post("/create_arear", [InvoicesController::class, 'create_arear']);
+Route::post("/get_invoice_data", [InvoicesController::class, 'getInvoicingData']);
 Route::post("/delete_arear", [InvoicesController::class, 'delete_arear']);
+Route::post("/reverse-invoice", [InvoicesController::class, 'reverseInvoice']);
+Route::get('/invoice-students', [StudentController::class, 'index']);
+Route::post('/services', [ServicesController::class, 'addService']);
 
 }
 );

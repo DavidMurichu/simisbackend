@@ -62,6 +62,11 @@ public function currentTerm()
     return $this->belongsTo(SchTerm::class, 'current_term_id', 'name');
 }
 
+public function services()
+{
+    return $this->hasMany(SchStudentService::class, 'studentid', 'id');
+}
+
     public $relations=['currentAcademicYear', 'currentClass', 'currentTerm'];
     
     public function get_fillable(){

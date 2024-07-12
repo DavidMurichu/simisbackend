@@ -49,7 +49,7 @@ trait DemonTrait
          $response = $editController->update(new Request($data), $tableName);
          return $response;
     }
-    public function demonAdd($request, $tableName){
+    public function demonAdd($request, $tableName, $isArray=false){
         if (is_array($request)) {
             // Create a new Request object from the array data
             $request = new Request($request);
@@ -59,7 +59,7 @@ trait DemonTrait
         // Instantiate EditTableDetailsController
         $addController = new AddDataController();
         // Call the update method
-        $response = $addController->create( $request, $tableName);
+        $response = $addController->create( $request, $tableName, $isArray);
         return $response;
    }
 

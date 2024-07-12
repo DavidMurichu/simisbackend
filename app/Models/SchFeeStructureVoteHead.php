@@ -26,19 +26,10 @@ class SchFeeStructureVoteHead extends Model
             return $this->belongsTo(SchVoteHead::class, 'voteheadid', 'name');
         }
 
-        public function getForeign(){
-            $voteheadId=$this->voteHead->id;
-            return ['voteheads'=>[
-                'id'=>$voteheadId
-            ]];
-        }
         public function get_fillable(){
             return $this->fillable;
           }
       
 
-        public function actions(){
-            
-        }
     
 }

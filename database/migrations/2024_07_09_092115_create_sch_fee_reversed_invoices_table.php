@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sch_fee_invoices', function (Blueprint $table) {
+        Schema::create('sch_fee_reversed_invoices', function (Blueprint $table) {
             $table->id('id');
             $table->unsignedInteger('studentid')->comment('Student Name');
             $table->string('invoicedate')->comment('Invoice Date');
@@ -27,9 +27,9 @@ return new class extends Migration
             $table->string('ipaddress', 32)->nullable();
             $table->enum('is_active', ['0', '1'])->default('1')->comment('Is Active');
             $table->foreign('studentid')->references('id')->on('sch_students');
-            $table->unique(["studentid", 'classid', 'termid'], 'unique_class_term');
             $table->timestamps();
         });
+    
     }
 
     /**
@@ -37,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sch_fee_invoices');
+        Schema::dropIfExists('sch_fee_reversed_invoices');
     }
 };

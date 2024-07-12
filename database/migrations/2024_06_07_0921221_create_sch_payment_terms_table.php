@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('sch_payment_terms', function (Blueprint $table) {
             $table->id('id');
+            $table->foreignId('incomeno')->constrained('incomes');
             $table->string('name', 32)->comment('Name')->unique();
             $table->text('remarks')->nullable()->comment('Remarks');
             $table->unsignedBigInteger('createdby')->nullable()->comment('Created By');
             $table->unsignedBigInteger('lasteditedby')->nullable()->comment('Last Edited By');
             $table->string('ipaddress', 32)->nullable()->comment('IP Address');
             $table->string('branch_name', 100)->nullable()->comment('Branch Name');
-            $table->foreignId('income_name')->constrained('incomes')->nullable()->comment('Income Name');
             $table->foreign('branch_name')->references('branch_name')->on('auth_branches');
             $table->timestamps();
         });

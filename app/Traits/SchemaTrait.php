@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\test\InvoiceHolder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -92,6 +93,7 @@ private function get_validation_rules($tableName, $columns)
     }
 
     $rules = [];
+    $compositekey=$this->getCompositeUniqueKeyColumns($tableName);
     
     foreach ($columns as $column) {
         if (!Schema::hasColumn($tableName, $column)) {
@@ -158,7 +160,9 @@ private function get_validation_rules($tableName, $columns)
             $columnRules[] = 'required';
         }
         if($is_unique){
-            $columnRules[] = 'unique:'.$tableName.','.$column;
+            if(!in_array($column,$compositekey)){
+                $columnRules[] = 'unique:'.$tableName.','.$column;
+            }
         }
         if($foreign_key){
             $columnRules[] = 'exists:'. $foreign_key;
@@ -248,13 +252,24 @@ private function isColumnNullable($tableName, $column)
                 return response()->json(['error' => 'Table does not exist'], 404);
             }
             // Get the fillable attributes from the model
-
+            $model = \Str::singular(\Str::studly($tableName));
+            $modelPath = "App\\Models\\" . $model;
+            if (!class_exists($modelPath)) {
+                throw new \Exception("Model class '$modelPath' not found.");
+            }
             
+            $modelInstance = new $modelPath;
+            $relationships=InvoiceHolder::getRelationshipNames($tableName, $modelInstance);
+            if(!empty($relationships)){
+                $data=$modelInstance::with($relationships)->get();
+                return $data;
+
+            }
             $query = DB::table($tableName);
             if (!empty($columns)) {
                 $query->select($columns);
             }
-            $relationship=$this->getRelationships($tableName);
+            
             $data = $query->get();
             return $data;
         } catch (\Exception $e) {
@@ -264,35 +279,7 @@ private function isColumnNullable($tableName, $column)
 
         }
 
-        private function getRelationships($tableName)
-    {
-        // Convert table name to model name
-        $model = Str::singular(Str::studly($tableName));
-        $modelPath = "App\\Models\\" . $model;
-        // Check if the class exists
-        if (!class_exists($modelPath)) {
-            throw new Exception("Model class '$modelPath' does not exist.");
-        }
-        // Instantiate the model class and create the record
-        $modelClass = new $modelPath();
-        $relationships = [];
-
-        // Use reflection to inspect model relationships
-        $reflectionClass = new \ReflectionClass($modelClass);
-        $methods = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);
-
-        foreach ($methods as $method) {
-            // Check if the method returns a Relation instance
-            $returnType = $method->getReturnType();
-            if ($returnType && is_subclass_of($returnType->getName(), Relation::class)) {
-                $relationships[] = $method->getName();
-            }
-        }
-
-        return $relationships;
-    }
-
-
+      
         //delete Data
         
         public function deleteData($tableName, $id)
@@ -436,5 +423,41 @@ public function getCrossForeignData($tableName, $foreignTable, $foreignColumn, $
 
 }
 
+
+
+
+
+
+
+public function getCompositeUniqueKeyColumns($tableName)
+    {
+        $results = \DB::select("
+            SELECT
+                TABLE_NAME,
+                INDEX_NAME,
+                GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX) AS INDEX_COLUMNS,
+                CASE WHEN COUNT(DISTINCT COLUMN_NAME) > 1 THEN 'Composite Unique Key' ELSE 'Single Column Unique Constraint' END AS INDEX_TYPE
+            FROM
+                INFORMATION_SCHEMA.STATISTICS
+            WHERE
+                TABLE_SCHEMA = '" . env('DB_DATABASE') . "'
+                AND TABLE_NAME = '$tableName'
+                AND INDEX_NAME <> 'PRIMARY'  
+                AND INDEX_NAME <> 'auto_index'
+            GROUP BY
+                TABLE_NAME,
+                INDEX_NAME
+        ");
+    
+        // Filter and extract INDEX_COLUMNS for Composite Unique Keys
+        $compositeUniqueKeyColumns = [];
+        foreach ($results as $result) {
+            if ($result->INDEX_TYPE === 'Composite Unique Key') {
+                $compositeUniqueKeyColumns = explode(',', $result->INDEX_COLUMNS);
+            }
+        }
+    
+        return $compositeUniqueKeyColumns;
+    }
 
 }

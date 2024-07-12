@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('incomes', function (Blueprint $table) {
                 $table->id('id');
-                $table->string('name', 64)->comment('Name')->unique();
+                $table->string('name', 64)->comment('Name');
                 $table->unsignedInteger('createdby')->nullable();
                 $table->unsignedInteger('lasteditedby')->nullable();
                 $table->string('ipaddress', 64)->nullable();

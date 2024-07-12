@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('sch_services', function (Blueprint $table) {
             $table->id('id');
-            $table->foreignId('servicedurationid')->constrained('sch_service_durations')->nullable()->comment('School Service Duration');
-            $table->foreignId('paymenttermid')->constrained('sch_payment_terms')->nullable()->comment('Payment Term');
+            $table->foreignId('servicedurationid')->nullable()->constrained('sch_service_durations')->comment('School Service Duration');
+            $table->foreignId('paymenttermid')->nullable()->constrained('sch_payment_terms')->comment('Payment Term');
             $table->string('name', 100)->comment('Service Name');
             $table->double('cost')->default(0.00)->comment('Service Cost');
             $table->enum('is_transport_route', ['0', '1'])->default('0')->comment('Is Transport Route');
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->unsignedBigInteger('lasteditedby')->nullable();
             $table->string('ipaddress', 32)->nullable();
             $table->enum('is_active', ['0', '1'])->default('1')->comment('Is Active');
-            $table->foreignId('branch_id')->constrained('auth_branches')->nullable()->comment('Branch Name');
+            $table->foreignId('branch_id')->nullable()->constrained('auth_branches')->comment('Branch Name');
             
 
             $table->timestamps();

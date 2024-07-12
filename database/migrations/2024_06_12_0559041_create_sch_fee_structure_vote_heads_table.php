@@ -23,11 +23,12 @@ return new class extends Migration
             $table->unsignedInteger('lasteditedby')->nullable();
             $table->string('ipaddress', 32)->nullable();
             $table->enum('is_active', ['0', '1'])->default('1')->comment('Is Active');
-            $table->unique(['classid', 'termid', 'voteheadid'], 'classid_termid_voteheadid_unique');
             $table->primary('id');
             $table->foreign('classid')->references('name')->on('sch_classes')->onDelete('cascade');
             $table->foreign('termid')->references('name')->on('sch_terms')->onDelete('cascade');
             $table->foreign('voteheadid')->references('name')->on('sch_vote_heads')->onDelete('cascade');
+            $table->unique(['classid', 'termid', 'voteheadid'], 'classid_termid_voteheadid_unique');
+
 
             $table->timestamps();
         });

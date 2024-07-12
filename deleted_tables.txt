@@ -1,0 +1,8 @@
+sch_vote_head_invoice_details
+sch_fee_structure_vote_heads
+sch_vote_heads
+sch_student_service_invoices
+sch_student_services
+sch_services
+member_payable_arears
+sch_payment_terms

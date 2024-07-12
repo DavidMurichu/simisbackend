@@ -4,9 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SchFeeInvoice extends Model
+class SchFeeReversedInvoice extends Model
 {
     use HasFactory;
     protected $fillable = [
@@ -31,6 +30,4 @@ class SchFeeInvoice extends Model
     public function get_fillable(){
       return $this->fillable;
     }
-
-
 }

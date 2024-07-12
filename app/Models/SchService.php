@@ -22,6 +22,11 @@ class SchService extends Model
         'is_active',
         'branch_id',
     ];
+
+    public function studentServices()
+    {
+        return $this->hasMany(SchStudentService::class, 'serviceid', 'id');
+    }
     public function get_fillable(){
         return $this->fillable;
       }

@@ -16,7 +16,7 @@ class SchPaymentTerm extends Model
         'lasteditedby',
         'ipaddress',
         'branch_name',
-        'income_name',
+        'incomeno',
     ];
     public function get_fillable(){
         return $this->fillable;

@@ -22,7 +22,6 @@ return new class extends Migration
             $table->unsignedBigInteger('lasteditedby')->nullable();
             $table->string('ipaddress', 32)->nullable();
             $table->enum('is_active', ['0', '1'])->default('1');
-
             $table->foreign('studentid')->references('id')->on('sch_students');
 
             // Unique constraint
