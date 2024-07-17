@@ -12,7 +12,7 @@ use DB;
 class EditTableDetailsController extends Controller
 {
     use SchemaTrait;
-    public function update(Request $request , $tableName){
+    public function update(Request $request , $tableName, $isArray=false){
         
         //Check if operationis allowed
         $allowed = config('crud.create');
@@ -76,7 +76,15 @@ class EditTableDetailsController extends Controller
         try {
             DB::table($tableName)->where('id', $id)->update($data_to_update);
             Log::info('updated '.$id);
-            return response()->json(['success' => 'Record updated successfully'], 200);
+            if(!$isArray){
+                return response()->json(['success' => 'Record updated successfully'], 200);
+            }
+            $data=[
+                'success'=>true,
+                'status'=>200,
+                'message'=>'Record updated successfully'
+            ];
+            return $data;
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return response()->json(['error' => 'Update failed ' ], 500);

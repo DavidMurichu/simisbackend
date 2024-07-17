@@ -8,4 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 class AccountType extends Model
 {
     use HasFactory;
+    protected $fillable = [
+        'name',
+        'subaccounttypeid',
+        'createdby',
+        'lasteditedby',
+        'ipaddress',
+        'is_active'
+    ];
+
+    public function get_fillable(){
+        return $this->fillable;
+    }
+
 }

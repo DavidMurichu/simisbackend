@@ -28,6 +28,10 @@ class SchFeeInvoice extends Model
     public function student(){
       return $this->belongsTo(SchStudent::class, 'studentid', 'id');
     }
+
+    public function classterm(){
+      return $this->belongsTo(SchStudentClassTerm::class, 'studentclasstermsid', 'id');
+    }
     public function get_fillable(){
       return $this->fillable;
     }

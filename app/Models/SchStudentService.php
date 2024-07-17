@@ -30,6 +30,18 @@ class SchStudentService extends Model
         return $this->belongsTo(SchStudentClassPromotion::class, 'studentclasspromotiontermid', 'id');
     }
 
+    public function classTerms()
+    {
+        return $this->hasManyThrough(
+            SchStudentClassTerm::class,
+            SchStudentClassPromotion::class,
+            'id', // Foreign key on promotions table
+            'studentclasspromotionid', // Foreign key on terms table
+            'promotion_id', // Local key on service table (optional if different)
+            'id' // Local key on promotions table
+        );
+    }
+
     public function get_fillable(){
         return $this->fillable;
       }

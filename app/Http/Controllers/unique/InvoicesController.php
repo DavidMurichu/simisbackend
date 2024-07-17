@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\unique;
 
 use App\Http\Controllers\Controller;
+use App\Models\DeletedMemberPayerable;
 use App\Models\MemberPayableArear;
 use App\Models\SchFeeInvoice;
 use App\Models\SchFeeReversedInvoice;
@@ -14,9 +15,11 @@ use App\Models\SchStudentService;
 use App\Models\test\InvoiceHolder;
 use App\Traits\DemonTrait;
 use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class InvoicesController extends Controller
 {
@@ -212,7 +215,7 @@ class InvoicesController extends Controller
         foreach ($serviceData as $serviceEntry) {
             try {
                 // Check if the service exists for the student
-                $service = SchStudentService::where('studentid', $serviceEntry["serviceid"])->first();
+                $service = SchStudentService::where('id', $serviceEntry["serviceid"])->first();
         
                 if (!$service) {
                     Log::error("Service not found for student with ID: {$serviceEntry['serviceid']}");
@@ -264,32 +267,49 @@ class InvoicesController extends Controller
         try{
             Log::info($request->all());
             $studentArears = $request->input('studentarears');
-            $services=$request->input('studentservices');
+            $paymentTerms=$request->input('paymentterms');
             $commonData=$request->input('commondata');
-            if(!$studentArears){
+            if(!$studentArears ){
                 $data=[
                     "message"=>"No student Selected"
                 ];
                 return response()->json($data, 400);
             }
-            foreach($studentArears as $studentArear){
-                $studentId=$studentArear['studentid'];
-                if(!$studentId){
-                    $data=[
-                        "message"=>"You must select a student"
-                    ];
-                    return response()->json($data, 400);
-                }
-                // get class details
-                $this->validateStudent($studentId, $studentArear);
-                // send message 
-                $documentNo=$this->generateInvoice();
-                $studentArear['documentno']=$documentNo;
-                $studentArear['invoicedon']=strval(Carbon::now());
-                //process services
-                $response=$this->demonAdd(new Request($studentArear), 'member_payable_arears');
-                
-            } 
+
+            if(!$paymentTerms ){
+                $data=[
+                    "message"=>"No Service Selected"
+                ];
+                return response()->json($data, 400);
+            }
+            foreach($paymentTerms as $paymentTerm){
+                foreach($studentArears as $studentArear){
+                    $studentId=$studentArear['studentid'];
+                    if(!$studentId){
+                        $data=[
+                            "message"=>"You must select a student"
+                        ];
+                        return response()->json($data, 400);
+                    }
+                    // get class details
+                    $this->validateStudent($studentId, $studentArear);
+                    // send message 
+                    $documentNo=$this->generateInvoice();
+                    
+                    $studentArear['is_active']=$commonData['is_active'];
+                    $studentArear['laseditedby']=$commonData['laseditedby'];
+                    $studentArear['remarks']=$commonData['remarks'];
+                    $studentArear['createdby']=$commonData['createdby'];
+                    $studentArear['documentno']=$documentNo;
+                    $studentArear['paymenttermid']=$paymentTerm;
+                    $studentArear['invoicedon']=strval(Carbon::now());
+                    //process services
+                    $response=$this->demonAdd(new Request($studentArear), 'member_payable_arears');
+                    
+                } 
+
+            }
+            
             return response()->json($response, $response->status());
         }catch(\Exception $e){
             \Log::error($e->getMessage());
@@ -302,40 +322,49 @@ class InvoicesController extends Controller
         }
     }
 
-    public function delete_arear(Request $request){
-        try{
-            $id=$request->input('id');
-            if(!$id){
-                $data=[
-                    "message"=>"Invalid Data"
-                ];
-                return response()->json($data, 400);
-            }
-            $arrearData=MemberPayableArear::findOrFail($id);
-            if(!$arrearData){
-                $data=[
-                    "message"=>"invalid id"
-                ];
-                return response()->json($data, 400);
-            }
-            $response=$this->demonAdd(new Request($arrearData), 'deleted_member_payerables');
-            if($response->status()!=201){
-                $data=[
-                    "message"=>"error deleting arear contact admin"
-                ];
-                return response()->json($data, 401);
-            }
-            $this->demonDelete('member_payable_arears', $id);
+    public function delete_arear(Request $request)
+    {
+        try {
+            // Validate the request
+            $validatedData = $request->validate([
+                'id' => 'required|integer|exists:member_payable_arears,id',
+            ]);
+    
+            $id = $validatedData['id'];
             
-
-        }catch(Exception $e){
-            Log::error('Delete arear error: ' .$e->getMessage());
-            $data=[
-                "message"=>'error: ' . $e->getMessage()
-            ];
-            return response()->json($data, 401);
+    
+            // Find the arrear data
+            $arrearData = MemberPayableArear::findOrFail($id)->toArray();
+            unset($arrearData['id']);
+            unset($arrearData['updated_at']);
+            unset($arrearData['created_at']);
+           
+            $inserted=DeletedMemberPayerable::insert($arrearData);
+            
+            
+            if (!$inserted) {
+                return response()->json(['message' => 'Error inserting data'], 500);
+            }
+    
+            // Assuming demonDelete is a function that performs the actual deletion
+            $this->demonDelete('member_payable_arears', $id);
+    
+            // Return success response
+            return response()->json(['message' => 'Arrear deleted successfully'], 200);
+    
+        } catch (ValidationException $e) {
+            // Catch validation errors
+            return response()->json(['message' => 'Invalid Data', 'errors' => $e->errors()], 400);
+        } catch (ModelNotFoundException $e) {
+            // Catch model not found errors
+            return response()->json(['message' => 'Invalid ID, arrear not found'], 404);
+        } catch (Exception $e) {
+            // Catch any other exceptions
+            Log::error('Delete arrear error: ' . $e->getMessage());
+            return response()->json(['message' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
+    
 
     public function recordPaymentTerm($paymentData){
         try{
@@ -423,7 +452,8 @@ public function getInvoicingData(Request $request)
             'currentAcademicYear:id,name',
             'currentClass:id,name',
             'currentTerm:id,name',
-            'services.service:id,name,cost'
+            'services.service:id,name,cost',
+
         ])
             ->where('current_class_id', $classId)
             ->where('current_term_id', $termId)
@@ -444,7 +474,7 @@ public function getInvoicingData(Request $request)
                 'admission_no' => $student->admission_no,
                 'services' => $student->services->map(function ($service) {
                     return [
-                        'serviceid' => $service->serviceid,
+                        'studentserviceid' => $service->id,
                         'name' => $service->service->name,
                         'amount' => $service->service->cost
                     ];

@@ -42,11 +42,11 @@ trait DemonTrait
         return $response;
 
     }
-    public function demonEdit($tableName, $data){
+    public function demonEdit($tableName, $data, $isArray=false){
          // Instantiate EditTableDetailsController
          $editController = new EditTableDetailsController();
          // Call the update method
-         $response = $editController->update(new Request($data), $tableName);
+         $response = $editController->update(new Request($data), $tableName, $isArray);
          return $response;
     }
     public function demonAdd($request, $tableName, $isArray=false){

@@ -7,6 +7,7 @@ use App\Http\Controllers\giant\EditTableDetailsController;
 use App\Http\Controllers\giant\GetTableDetailsController;
 use App\Http\Controllers\giant\MassAddController;
 use App\Http\Controllers\unique\InvoicesController;
+use App\Http\Controllers\unique\PaymentController;
 use App\Http\Controllers\unique\PromotedStudentsController;
 use App\Http\Controllers\unique\ServicesController;
 use App\Http\Controllers\unique\StudentController;
@@ -36,6 +37,13 @@ Route::post("/delete_arear", [InvoicesController::class, 'delete_arear']);
 Route::post("/reverse-invoice", [InvoicesController::class, 'reverseInvoice']);
 Route::get('/invoice-students', [StudentController::class, 'index']);
 Route::post('/services', [ServicesController::class, 'addService']);
+
+//payments
+
+Route::post('/add_payment', [PaymentController::class, 'processPayment']);
+Route::post('/get_payment_data', [PaymentController::class, 'getstudents']);
+
+
 
 }
 );

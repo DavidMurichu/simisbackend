@@ -13,6 +13,15 @@ $tables=[
     'sch_student_service_invoices',
     'sch_vote_head_invoice_details',
     'sch_fee_structure_vote_heads',
+    'deleted_member_payerables',
+    'sch_fee_payments',
+    'banks',
+
+    //payments
+    'account_types',
+    'sub_account_types',
+    'paymentmodes',
+    'sch_service_payments',
 
 
     'sch_fee_invoices',

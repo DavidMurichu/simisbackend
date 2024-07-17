@@ -18,6 +18,10 @@ class SchStudentServiceInvoice extends Model
         'invoiceid',
         'studentserviceid',
     ];
+
+    public function studentservice(){
+        return $this->belongsTo(SchStudentService::class, 'studentserviceid', 'id');
+    }
     public function get_fillable(){
         return $this->fillable;
       }
