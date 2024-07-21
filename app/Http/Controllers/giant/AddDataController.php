@@ -128,12 +128,21 @@ class AddDataController extends Controller
             ];
 
         } catch (Exception $e) {
-            Log::error('Error creating data: ' . $e->getMessage());
-            $status = $e->getCode() ?: 500;
-            $results[] = [
-                'status' => 'error',
-                'message' => 'An error occurred while creating data.'
-            ];
+            Log::error($e->getCode());
+            if (strpos($e->getMessage(), 'SQLSTATE[23000]') !== false) {
+                // Handle SQLSTATE[23000]: Integrity constraint violation
+                Log::error('Integrity constraint violation: ' . $e->getMessage());
+                $results[] = [
+                    'status' => 'error',
+                    'message' => 'Data Aready exists'
+                ];
+            } else {
+                Log::error('Error creating data: ' . $e->getMessage());
+                $results[] = [
+                    'status' => 'error',
+                    'message' => 'An error occurred while creating data.'
+                ];
+            }
         }
     }
 

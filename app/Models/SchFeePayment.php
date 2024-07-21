@@ -34,4 +34,14 @@ class SchFeePayment extends Model
     public function get_fillable(){
         return $this->fillable;
       }
+
+    public function student(){
+        return $this->belongsTo(SchStudent::class, 'studentid', 'id');
+    }
+    public function bank(){
+        return $this->belongsTo(Bank::class, 'bankid', 'id');
+    }
+    public function paymentmode(){
+        return $this->belongsTo(Paymentmode::class, 'paymentmodeid', 'id');
+    }
 }

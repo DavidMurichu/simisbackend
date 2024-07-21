@@ -26,6 +26,8 @@ Route::post("/add_data/{tableName}", [AddDataController::class, 'create']);
 Route::get("/promoted", [PromotedStudentsController::class, 'getAllPromoted']);
 
 Route::get("/promoted/students/{tableName?}", [PromotedStudentsController::class, 'getAllPromoted']);
+Route::post("/promoted/students/{tableName?}", [PromotedStudentsController::class, 'getAllPromoted']);
+Route::post("/get_non_reported_students", [PromotedStudentsController::class, 'getAllPromotedStudents']);
 Route::post("/student_transition/{tableName}", [PromotedStudentsController::class, 'promoteOrDemoteStudent']);
 Route::post("/report", [StudentReportingController::class, 'studentClassTermReporting']);
 Route::post("/voteheads", [StudentReportingController::class, 'studentClassTermReporting']);

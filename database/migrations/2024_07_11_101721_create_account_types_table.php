@@ -90,7 +90,6 @@ return new class extends Migration
             $table->foreignId('lasteditedby')->nullable();
             $table->string('ipaddress', 32)->nullable();
             $table->enum('is_active', ['0', '1'])->default('1')->comment('Is Active');
-
             $table->timestamps();
         });
 

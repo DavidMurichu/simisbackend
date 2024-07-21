@@ -21,9 +21,10 @@ return new class extends Migration
             $table->unsignedInteger('lasteditedby')->nullable();
             $table->string('ipaddress', 32)->nullable();
             $table->enum('is_active', ['0', '1'])->default('1')->comment('Is Active');
-            $table->unique(['studentid', 'current_class_id', 'academicyear'], 'unique_student_class_academic_year');  // Composite unique key
             $table->foreign('current_class_id')->references('name')->on('sch_classes');
             $table->foreign('academicyear')->references('name')->on('sch_academic_years');
+            $table->unique(['studentid', 'current_class_id', 'academicyear'], 'unique_student_class_academic_year');  // Composite unique key
+            $table->unique(['studentid', 'academicyear'], 'unique_student_academic_year');  // Composite unique key
             $table->timestamps();
         });
     }

@@ -45,13 +45,14 @@ class InvoicesController extends Controller
                 $invoiceData = $studentInvoiceData['invoiceData'];
                 $voteHeadData = $studentInvoiceData['voteheads'];
                 $serviceData = $studentInvoiceData['services'];
-    
                 // Create an Invoice for each student
                 $invoiceResult = $this->createInvoice($invoiceData, $commonData, $studentId);
+                \Log::info('check 1');
               
                 if (!$invoiceResult['success']) {
                     throw new \Exception("Error creating invoice for student ID: $studentId");
                 }
+                \Log::info('check 2');
     
                 $invoiceId = $invoiceResult['invoice_id'];
                 
@@ -59,11 +60,15 @@ class InvoicesController extends Controller
                 if(!empty($voteHeadData)){
                 $this->processVoteHeads($voteHeadData, $commonData, $invoiceId);
                 }
+                \Log::info('check 3');
+
                 
                 // Process Services
                 if(!empty($serviceData)){
                 $this->processServices($serviceData, $commonData, $invoiceId, $studentId);
                 }
+                \Log::info('check 4');
+
             }
     
             // Commit the transaction
@@ -87,25 +92,33 @@ class InvoicesController extends Controller
     {
         // Retrieve the student with related data eagerly loaded
         $student = SchStudent::with(['currentClass', 'currentTerm', 'currentAcademicYear'])->find($studentId);
-
         // Check if student exists
         if (!$student) {
             throw new \Exception("Student with ID $studentId not found.");
         } 
+        \Log::info('check 1.1');
+
         try{
-            $promotionId = SchStudentClassPromotion::where('studentid', $studentId)->first();
+           
+            $promotionId = SchStudentClassPromotion::where('studentid', $studentId)
+            ->where('academicyear', $student->academicyearid)
+            ->where('current_class_id', $student->current_class_id)
+            ->first();
+        \Log::info('check 1.2',  $student->toArray());
 
             if ($promotionId) {
                 // If promotion ID is found, fetch class terms associated with it
                 $classterm = SchStudentClassTerm::with('studentclasspromotion')
                     ->where('studentclasspromotionid', $promotionId->id)
                     ->first();
+                
             } else {
                 // Handle case where no promotion ID is found for the student ID
                 Log::info("No promotion found for student ID: $studentId");
                 throw new \Exception("Student have not reported." );
-
             }
+        \Log::info('check 1.4');
+
         }catch(Exception $e){
             throw new \Exception("Student not promoted.".$e );
         }
@@ -113,6 +126,7 @@ class InvoicesController extends Controller
 
     
 
+        \Log::info('check 1.5', $classterm->toArray());
 
 
         if (
@@ -134,6 +148,7 @@ class InvoicesController extends Controller
         ) {
             throw new \Exception("invalid academic year. ");
         }
+
         // Generate Invoice Number
         $invoiceNumber = $this->generateInvoice();
         // Merge invoice number into invoice data
@@ -445,7 +460,9 @@ public function getInvoicingData(Request $request)
 
         // Fetch students who are not yet invoiced and match the given class, term, and academic year
         $invoiced = SchFeeInvoice::pluck('studentid')->toArray();
-        $promoted = SchStudentClassPromotion::pluck('studentid')->toArray();
+        $promoted = SchStudentClassPromotion::where('current_class_id', $classId)
+        ->where('academicyear', $academicYearId)
+        ->pluck('studentid')->toArray();
         $notInvoicedPromoted = !empty($invoiced) ? array_diff($promoted, $invoiced) : $promoted;
 
         $students = SchStudent::with([

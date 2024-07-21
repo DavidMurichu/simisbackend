@@ -20,10 +20,6 @@ class SchServicePayment extends Model
         'lasteditedby',
         'ipaddress',
         'is_active'
-
-
-
-
     ];
 
     public function get_fillable(){

@@ -23,6 +23,11 @@ class SchStudentClassPromotion extends Model
     {
         return $this->hasMany(SchStudentClassTerm::class, 'studentclasspromotionid');
     }
+
+    public function student()
+    {
+        return $this->belongsTo(SchStudent::class, 'studentid', 'id');
+    }
     public function get_fillable(){
         return $this->fillable;
     }

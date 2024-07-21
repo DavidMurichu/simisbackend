@@ -58,8 +58,7 @@ class PaymentController extends Controller
 
         // Process the service payment if service data is provided
         if (!empty($serviceData)) {
-            $serviceData['paymentid'] = $paymentId;
-            $serviceStatus = $this->processServicePayment($serviceData);
+            $serviceStatus = $this->processServicePayment($serviceData,  $paymentId);
             if ($serviceStatus['status'] === 'error') {
                 return response()->json([
                     'status' => 'error',
@@ -165,7 +164,7 @@ class PaymentController extends Controller
         }
     }
     
-    public function processServicePayment($serviceData) {
+    public function processServicePayment($serviceData, $paymentId) {
         try {
             foreach($serviceData as $service){
                 // Validate required service data fields
@@ -173,13 +172,14 @@ class PaymentController extends Controller
                 throw new Exception('Missing required service data fields');
             }
 
-    
+            $service['paymentid']=$paymentId;
             $student_service_id = $service['studentserviceid'];
             $Debit_Amount = $service['amount'];
     
             // Fetch the student's service invoice
             $Student_service_Invoice = SchStudentServiceInvoice::where('studentserviceid', $student_service_id)->first();
-    
+            
+
             // Check if the service invoice exists
             if (!$Student_service_Invoice) {
                 throw new Exception('Service invoice not found for the given student service ID');
@@ -205,7 +205,7 @@ class PaymentController extends Controller
             // Update the service invoice using the demonEdit method
             $responseEdit = $this->demonEdit('sch_student_service_invoices', $data, true);
         \Log::info('check 3.5');
-
+            $service['balance']=$balance;
     
             if (!$responseEdit['success']) {
                 throw new Exception('Error updating the service invoice');
@@ -216,9 +216,10 @@ class PaymentController extends Controller
 
             \Log::info('check 3.6', $responseAdd);
     
-            if (!$responseAdd['success']) {
+            if ($responseAdd['status']!=201) {
                 throw new Exception('Error adding the service payment');
             }
+            \Log::info('check 3.7', $responseAdd);
     
             return [
                 'status' => 'success'
@@ -249,10 +250,15 @@ class PaymentController extends Controller
             $classId = $request->input('classid');
             $termId = $request->input('termid');
             $academicYearId = $request->input('academicyearid');
+            
+            //fetch class promotions
     
             // Fetch student IDs from SchFeeInvoice
             $studentIds = SchFeeInvoice::all()->pluck('studentid');
-    
+
+            $studentPromortionId=SchStudentClassPromotion::whereIn('studentid', $studentIds);
+
+            
             // Query students with relationships
             $students = SchStudent::with([
                 'currentAcademicYear:id,name',
