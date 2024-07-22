@@ -5,6 +5,7 @@ namespace App\Http\Controllers\unique;
 use App\Http\Controllers\Controller;
 use App\Models\DeletedMemberPayerable;
 use App\Models\MemberPayableArear;
+use App\Models\SchAcademicYearTerm;
 use App\Models\SchFeeInvoice;
 use App\Models\SchFeeReversedInvoice;
 use App\Models\SchFeeStructureVoteHead;
@@ -85,7 +86,7 @@ class InvoicesController extends Controller
             Log::error('Invoice processing error: ' . $e->getMessage());
     
             // Return error response
-            return response()->json(['error' => 'Failed to process invoices. Please try again.'], 500);
+            return response()->json(['error' =>$e->getMessage()], 500);
         }
     }
     public function createInvoice($invoiceData,$commonData, $studentId)
@@ -104,18 +105,21 @@ class InvoicesController extends Controller
             ->where('academicyear', $student->academicyearid)
             ->where('current_class_id', $student->current_class_id)
             ->first();
-        \Log::info('check 1.2',  $student->toArray());
+
+            $academicterm=SchAcademicYearTerm::where('academicyear', $student->academicyearid)->first();
+        \Log::info('check 1.2',  $promotionId->toArray());
 
             if ($promotionId) {
                 // If promotion ID is found, fetch class terms associated with it
                 $classterm = SchStudentClassTerm::with('studentclasspromotion')
                     ->where('studentclasspromotionid', $promotionId->id)
+                    ->where('classterm', $academicterm)
                     ->first();
                 
             } else {
                 // Handle case where no promotion ID is found for the student ID
                 Log::info("No promotion found for student ID: $studentId");
-                throw new \Exception("Student have not reported." );
+                throw new \Exception("Student have not been promoted to class." );
             }
         \Log::info('check 1.4');
 
@@ -124,9 +128,11 @@ class InvoicesController extends Controller
         }
         // Validate invoice data against student's current details
 
-    
+        if(!$classterm){
+            throw new \Exception("Student not reported to term." );
+        }
 
-        \Log::info('check 1.5', $classterm->toArray());
+        // \Log::info('check 1.5', $classterm->toArray());
 
 
         if (

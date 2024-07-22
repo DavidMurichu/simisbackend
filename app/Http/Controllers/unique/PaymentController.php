@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\unique;
 
 use App\Http\Controllers\Controller;
+use App\Models\SchAcademicYearTerm;
 use App\Models\SchFeeInvoice;
 use App\Models\SchStudent;
 use App\Models\SchStudentClassPromotion;
@@ -237,71 +238,94 @@ class PaymentController extends Controller
     }
 
     public function getstudents(Request $request)
-    {
-        try {
-            // Validate incoming request data
-            $request->validate([
-                'classid' => 'required|string',
-                'termid' => 'required|string',
-                'academicyearid' => 'required|string',
-            ]);
-    
-            // Retrieve inputs from request
-            $classId = $request->input('classid');
-            $termId = $request->input('termid');
-            $academicYearId = $request->input('academicyearid');
-            
-            //fetch class promotions
-    
-            // Fetch student IDs from SchFeeInvoice
-            $studentIds = SchFeeInvoice::all()->pluck('studentid');
+{
+    try {
+        // Validate incoming request data
+        $request->validate([
+            'classid' => 'required|string',
+            'termid' => 'required|string',
+            'academicyearid' => 'required|string',
+        ]);
 
-            $studentPromortionId=SchStudentClassPromotion::whereIn('studentid', $studentIds);
+        // Retrieve inputs from request
+        $classId = $request->input('classid');
+        $termId = $request->input('termid');
+        $academicYearId = $request->input('academicyearid');
 
-            
-            // Query students with relationships
-            $students = SchStudent::with([
-                'currentAcademicYear:id,name',
-                'currentClass:id,name',
-                'currentTerm:id,name',
-                'services.service:id,name,cost',
-            ])
-                ->where('current_class_id', $classId)
-                ->where('current_term_id', $termId)
-                ->where('academicyearid', $academicYearId)
-                ->whereIn('id', $studentIds)
-                ->get();
-    
-            // Return response with students data
-            return response()->json([
-                'success' => true,
-                'students' => $students,
-            ], 200);
-    
-        } catch (ValidationException $e) {
-            // Handle validation errors
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
-    
-        } catch (ModelNotFoundException $e) {
-            // Handle model not found errors
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data not found',
-            ], 404);
-    
-        } catch (\Exception $e) {
-            // Handle other unexpected errors
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to retrieve students',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        // Fetch student IDs from SchFeeInvoice
+        $studentIds = SchFeeInvoice::all()->pluck('studentid');
+
+        // Fetch student promotions
+        $studentPromotionIds = SchStudentClassPromotion::whereIn('studentid', $studentIds)->pluck('id');
+        $academicYearTerm = SchAcademicYearTerm::where('academicyear', $academicYearId)->first();
+        $studentClassTerms = SchStudentClassTerm::whereIn('studentclasspromotionid', $studentPromotionIds)
+            ->where('term', $termId)
+            ->where('classterm', $academicYearTerm->classterm)
+            ->get()
+            ->keyBy('studentclasspromotionid');
+
+        $studentPromotionIds = $studentClassTerms->pluck('studentclasspromotionid');
+        $studentsIds = SchStudentClassPromotion::whereIn('id', $studentPromotionIds)->pluck('studentid');
+
+        // Query students with relationships
+        $students = SchStudent::with([
+            'currentAcademicYear:id,name',
+            'currentClass:id,name',
+            'currentTerm:id,name',
+            'services.service:id,name,cost',
+        ])
+            ->where('current_class_id', $classId)
+            ->where('current_term_id', $termId)
+            ->where('academicyearid', $academicYearId)
+            ->whereIn('id', $studentsIds)
+            ->get();
+
+        // Create the response data structure
+        $responseData = $students->map(function($student) use ($studentClassTerms) {
+            $promotion = SchStudentClassPromotion::where('studentid', $student->id)
+                ->where('current_class_id', $student->current_class_id)
+                ->where('academicyear', $student->academicyearid)
+                ->first();
+
+            $currentClassTerm = $studentClassTerms->get(optional($promotion)->id);
+
+            return [
+                'student_info' => $student,
+                'current_class_term' => $currentClassTerm
+            ];
+        });
+
+        // Return response with students data
+        return response()->json([
+            'success' => true,
+            'students' => $responseData,
+        ], 200);
+
+    } catch (ValidationException $e) {
+        // Handle validation errors
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Validation failed',
+            'errors' => $e->errors(),
+        ], 422);
+
+    } catch (ModelNotFoundException $e) {
+        // Handle model not found errors
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Data not found',
+        ], 404);
+
+    } catch (\Exception $e) {
+        // Handle other unexpected errors
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to retrieve students',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
+
     
 }
 
