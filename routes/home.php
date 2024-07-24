@@ -24,6 +24,8 @@ Route::post("/edit/{tableName}", [EditTableDetailsController::class, 'update']);
 Route::post("/delete/{tableName}", [DeleteController::class, 'delete']);
 Route::post("/add_data/{tableName}", [AddDataController::class, 'create']);
 Route::get("/promoted", [PromotedStudentsController::class, 'getAllPromoted']);
+# student 
+Route::post("/register/student", [StudentController::class, 'RegisterStudent']);
 
 Route::get("/promoted/students/{tableName?}", [PromotedStudentsController::class, 'getAllPromoted']);
 Route::post("/promoted/students/{tableName?}", [PromotedStudentsController::class, 'getAllPromoted']);

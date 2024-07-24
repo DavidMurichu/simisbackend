@@ -32,6 +32,7 @@ class InvoicesController extends Controller
             // Separate common data from the request
             $commonData = $request->input('commondata');
             $studentInvoices = $request->input('studentinvoices');
+            
     
             // Check if there are selected student invoices
             if (empty($studentInvoices)) {
@@ -49,7 +50,6 @@ class InvoicesController extends Controller
                 // Create an Invoice for each student
                 $invoiceResult = $this->createInvoice($invoiceData, $commonData, $studentId);
                 \Log::info('check 1');
-              
                 if (!$invoiceResult['success']) {
                     throw new \Exception("Error creating invoice for student ID: $studentId");
                 }
@@ -107,14 +107,16 @@ class InvoicesController extends Controller
             ->first();
 
             $academicterm=SchAcademicYearTerm::where('academicyear', $student->academicyearid)->first();
-        \Log::info('check 1.2',  $promotionId->toArray());
+        \Log::info('check 1.2',  [$academicterm->name, $promotionId->id]);
 
             if ($promotionId) {
                 // If promotion ID is found, fetch class terms associated with it
                 $classterm = SchStudentClassTerm::with('studentclasspromotion')
                     ->where('studentclasspromotionid', $promotionId->id)
-                    ->where('classterm', $academicterm)
+                    ->where('classterm', $academicterm->name)
                     ->first();
+
+                
                 
             } else {
                 // Handle case where no promotion ID is found for the student ID

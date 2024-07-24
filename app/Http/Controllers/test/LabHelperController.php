@@ -22,7 +22,7 @@ class LabHelperController extends Controller
 
     public function getTableColumns(Request $request)
     {
-        $tableName='sch_student_services';
+        $tableName='sch_student_class_terms';
         // Check if the table exists
         if (!Schema::hasTable($tableName)) {
             throw new \Exception("Table '$tableName' does not exist.");

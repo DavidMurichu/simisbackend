@@ -253,19 +253,47 @@ class PaymentController extends Controller
         $academicYearId = $request->input('academicyearid');
 
         // Fetch student IDs from SchFeeInvoice
-        $studentIds = SchFeeInvoice::all()->pluck('studentid');
+        $studentIds = SchFeeInvoice::all()->pluck('studentid')->toArray();
+        \Log::info('check 1', $studentIds);
+        
+        if (empty($studentIds)) {
+            throw new Exception("No student IDs found in SchFeeInvoice");
+        }
 
         // Fetch student promotions
-        $studentPromotionIds = SchStudentClassPromotion::whereIn('studentid', $studentIds)->pluck('id');
+        $studentPromotionIds = SchStudentClassPromotion::whereIn('studentid', $studentIds)->pluck('id')->toArray();
+        \Log::info('check 2', $studentPromotionIds);
+        
+        if (empty($studentPromotionIds)) {
+            throw new Exception("No student promotions found for given student IDs");
+        }
+
         $academicYearTerm = SchAcademicYearTerm::where('academicyear', $academicYearId)->first();
+        if (!$academicYearTerm) {
+            throw new Exception("No academic year term found for given academic year ID");
+        }
+        \Log::info('check 3 '. $academicYearId);
+
         $studentClassTerms = SchStudentClassTerm::whereIn('studentclasspromotionid', $studentPromotionIds)
             ->where('term', $termId)
-            ->where('classterm', $academicYearTerm->classterm)
+            ->where('classterm', $academicYearTerm->name)
             ->get()
             ->keyBy('studentclasspromotionid');
+        \Log::info('check 4');
 
-        $studentPromotionIds = $studentClassTerms->pluck('studentclasspromotionid');
-        $studentsIds = SchStudentClassPromotion::whereIn('id', $studentPromotionIds)->pluck('studentid');
+        if ($studentClassTerms->isEmpty()) {
+            throw new Exception("No student class terms found for given parameters");
+        }
+
+        $studentPromotionIds = $studentClassTerms->pluck('studentclasspromotionid')->toArray();
+        \Log::info('check 5', $studentPromotionIds);
+        
+        $studentsIds = SchStudentClassPromotion::whereIn('id', $studentPromotionIds)->pluck('studentid')->toArray();
+        \Log::info('check 6', $studentsIds);
+
+        if (empty($studentsIds)) {
+            throw new Exception("No students found for given class promotion IDs");
+        }
 
         // Query students with relationships
         $students = SchStudent::with([
@@ -280,6 +308,10 @@ class PaymentController extends Controller
             ->whereIn('id', $studentsIds)
             ->get();
 
+        if ($students->isEmpty()) {
+            throw new Exception("No students found for given parameters");
+        }
+
         // Create the response data structure
         $responseData = $students->map(function($student) use ($studentClassTerms) {
             $promotion = SchStudentClassPromotion::where('studentid', $student->id)
@@ -288,11 +320,8 @@ class PaymentController extends Controller
                 ->first();
 
             $currentClassTerm = $studentClassTerms->get(optional($promotion)->id);
-
-            return [
-                'student_info' => $student,
-                'current_class_term' => $currentClassTerm
-            ];
+            $student['current_class_term'] = $currentClassTerm;
+            return $student;
         });
 
         // Return response with students data
@@ -307,22 +336,22 @@ class PaymentController extends Controller
             'status' => 'error',
             'message' => 'Validation failed',
             'errors' => $e->errors(),
-        ], 422);
+        ], 200);
 
     } catch (ModelNotFoundException $e) {
         // Handle model not found errors
         return response()->json([
             'status' => 'error',
             'message' => 'Data not found',
-        ], 404);
+        ], 200);
 
     } catch (\Exception $e) {
         // Handle other unexpected errors
         return response()->json([
             'status' => 'error',
-            'message' => 'Failed to retrieve students',
+            'message' => $e->getMessage(),
             'error' => $e->getMessage(),
-        ], 500);
+        ], 200);
     }
 }
 
